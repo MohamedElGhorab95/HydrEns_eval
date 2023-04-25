@@ -539,44 +539,6 @@ class Ensemble_run(Forecast):
         """
         import copy
 
-        # newself = copy.deepcopy(self)
-
-        # # try:
-        # #     if self.ext == self.fr:
-        # #         ds = newself.gen_dataset()
-        # # except:
-
-        # ds = newself.ext
-
-        # # ds = newself.gen_dataset()       
-
-        # if averaging == 'mean':
-        #       # calculate ensemble mean
-        #       mean = ds.to_array(dim='new').mean('new')
-        #       # add the mean to the dataset
-        #       ds=ds.assign(ensemble_val=mean)
-        #       # extracting the mean variable to a dataXarray and structuring the array | forecast
-        #       newself.arr = ds.ensemble_val.rename("EPS rainfall forecast | mean")
-        # elif averaging == 'median':
-        #       # calculate ensemble median
-        #       median = ds.to_array(dim='new').median('new')
-        #       # add the median to the dataset
-        #       ds=ds.assign(ensemble_val=median)
-        #       # extracting the median variable to a dataXarray and structuring the array | forecast
-        #       newself.arr = ds.ensemble_val.rename("EPS rainfall forecast | median")
-        # else: 
-        #       # calculate ensemble percentile
-        #       per = ds.to_array(dim='new') # extract the ensembles to a new dimension and put it a new array
-        #       # calculate the percentile over this dimension
-        #       per = per.quantile(averaging/100,dim='new')
-        #       # assing the ensemble variable in the original data set to the created array
-        #       ds=ds.assign(ensemble_val=per)
-        #       # extracting the mean variable to a dataXarray and renaming it
-        #       newself.arr = ds.ensemble_val.rename("EPS rainfall forecast | {}th percentile".format(averaging)) 
-
-        # return newself
-
-        import numpy as np
 
         if self.dssid != 55:
             newself = copy.deepcopy(self)
