@@ -1,10 +1,3 @@
-"""
-Created on Sun Apr  9 11:26:43 2023
-
-@author: M Elghorab
-"""
-
-
 class CONT(object):
 
     def __init__(self, forecast_object, observation_object, forecast_threshold, observation_threshold=None):
