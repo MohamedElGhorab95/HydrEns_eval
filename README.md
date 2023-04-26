@@ -19,3 +19,5 @@ This module includes all the functions to convert between the .grib files by the
 This module includes all the forecast and observation objects and methods to be used for evaluation.
 # fr_Conttools.py
 This module includes the contingency object that utilizes the forecast and observation objects to perform the comparison. 
+# fr_ROCtools.py
+This module includes the relative operation characteristics curve object and plotting method.
