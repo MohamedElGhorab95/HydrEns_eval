@@ -1,7 +1,7 @@
 # HydrEns_eval
-The evaluation tools package provides a set of methods to evaluate the performance of rainfall/runoff forecast dataset
-against radar/gauge observation dataset.
-It also works with ensemble data sets, and provides contingency table metrics for either grid or array based comparison. 
+The evaluation tools package provides a set of methods to evaluate the performance and reliability of rainfall/runoff forecasts
+against radar/gauge observations.
+It also works with ensemble datasets, and provides visual comparisons and contingency table based metrics for either grid or array data. 
 # Dependencies
         * Weather data Harmonizer package developed by Michael Wagner at TUDresden michael.wagner@tu-dresden.de
         * xarray package            V 2023.4.2 
