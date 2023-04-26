@@ -13,7 +13,9 @@ It also works with ensemble datasets, and provides visual comparisons and contin
         * rioxarray package         V 0.14.01
         * pandas                    V 1.04.00
 # Structure
+# fr_to_netcdf_tools.py
+This module includes all the functions to convert between the .grib files by the DWD to netCDF format, to be later used as input for the other modules.
 # fr_entities_tools.py
-This package includes all the forecast and observation objects and methods to be used for evaluation.
+This module includes all the forecast and observation objects and methods to be used for evaluation.
 # fr_Conttools.py
-This package includes the contingency object that utilizes the forecast and observation objects to perform the comparison. 
+This module includes the contingency object that utilizes the forecast and observation objects to perform the comparison. 
