@@ -678,8 +678,11 @@ class Ensemble_run(Forecast):
 
 class Runoff(object):
 
-    def __init__(self):
-        pass
+    def __init__(self, forecast_file):
+        import xarray as xr
+        self.fr = xr.open_dataset(forecast_file)
+        
+       
 
 
 # =================================================================================================================        
@@ -689,8 +692,16 @@ class Runoff(object):
 
 class R_Observation(Runoff):
 
-    def __init__(self):
-        pass
+    def __init__(self, forecast_file):
+        Runoff.__init__(self, forecast_file)
+        
+    def gen_obs(self):
+        
+        import copy
+        newself = copy.deepcopy(self)
+        ds = newself.fr
+        newself.fr = ds.Q_obs_value
+        return newself
 
 
 # =================================================================================================================        
@@ -700,8 +711,44 @@ class R_Observation(Runoff):
 
 class R_Forecast(Runoff):
 
-    def __init__(self):
-        pass
+    def __init__(self, forecast_file):
+        Runoff.__init__(self, forecast_file)
+        
+    def gen_quantiles(self, averaging):
+        
+        import copy
+        newself = copy.deepcopy(self)
+        ds = newself.fr
+        
+        if averaging == 'mean':
+            # calculate ensemble mean
+            mean = ds.Q_for_eps_value.mean(dim='eps', skipna=True)
+            # add the mean to the dataset
+            ds = ds.assign(ensemble_val=mean)
+            # extracting the mean variable to a dataXarray and structuring the array | forecast
+            newself.fr = ds.ensemble_val.rename("Runoff forecast | mean")
+        elif averaging == 'median':
+            # calculate ensemble median
+            median = ds.Q_for_eps_value.median(dim='eps', skipna=True)
+            # add the median to the dataset
+            ds = ds.assign(ensemble_val=median)
+            # extracting the median variable to a dataXarray and structuring the array | forecast
+            newself.fr = ds.ensemble_val.rename("Runoff forecast | median")
+        else:
+            # calculate ensemble percentile
+            per = ds.Q_for_eps_value  # extract the ensembles to a new dimension and put it a new array
+            # calculate the percentile over this dimension
+            per = per.quantile(q=averaging / 100, dim='eps', skipna=True)
+
+            # assing the ensemble variable in the original data set to the created array
+            ds = ds.assign(ensemble_val=per)
+            # extracting the mean variable to a dataXarray and renaming it
+            newself.fr = ds.ensemble_val.rename("Runoff forecast | {}th percentile".format(averaging))
+
+        return newself
+        
+        
+        
 
 
 # ==============================================================================
@@ -783,7 +830,7 @@ if __name__ == '__main__':
         return icond2, icon_agg, sub_icon, icon_avg, ico_3
 
 
-    icond2, icon_agg, sub_icon, icon_avg,ico_3 = test_Det()
+    # icond2, icon_agg, sub_icon, icon_avg,ico_3 = test_Det()
 
     def test_EPS():
         """
@@ -829,7 +876,12 @@ if __name__ == '__main__':
 
 
     #test_EPS()
-
+    
+    
+    q = R_Forecast("D:/Erasmus_FRM/05.Masterarbeit/02.Daten/01.Runoff_data/forecast_system/ForData/202207052008/2022070518_5371823_Geising1_WeisseMueglitz_data.nc").gen_quantiles(95)
+    obs = R_Observation("D:/Erasmus_FRM/05.Masterarbeit/02.Daten/01.Runoff_data/forecast_system/ForData/202207052008/2022070518_5371823_Geising1_WeisseMueglitz_data.nc").gen_obs()
+    
+    
 
 
 
