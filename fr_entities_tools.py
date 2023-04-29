@@ -3,6 +3,20 @@ Created on Sun Apr  9 19:31:52 2023
 
 @author: M Elghorab
 """
+import copy
+
+import pandas as pd
+
+import geopandas as gp
+import rioxarray as rio
+from shapely.geometry import mapping
+import shapefile
+import pyproj
+import xarray as xr
+import numpy as np
+import datetime as dt
+import matplotlib.pyplot as plt
+from shapely.geometry import mapping
 
 
 class Rainfall(object):
@@ -32,7 +46,7 @@ class Rainfall(object):
             new grid cell size / old grid cell size.
 
         """
-        import copy
+        
         # this prevents overwriting the original data object
         newself = copy.deepcopy(self)
 
@@ -51,8 +65,7 @@ class Rainfall(object):
             hours to sum over.
 
         """
-        import copy
-        import pandas as pd
+        
         # this prevents overwriting the original data object
         newself = copy.deepcopy(self)
 
@@ -69,7 +82,7 @@ class Rainfall(object):
         NOTE: this method only works with pre generated rainfall fields,
         however it can also work with ensemble object
         """
-        import copy
+        
         # this prevents overwriting the original data object
         newself = copy.deepcopy(self)
 
@@ -111,7 +124,7 @@ class Rainfall(object):
 
         """
 
-        import copy
+        
         # this prevents overwriting the original data object
         newself = copy.deepcopy(self)
         if 'gen_observation_field' in dir(self):
@@ -157,10 +170,7 @@ class Rainfall(object):
 
         """
 
-        import copy
-        import geopandas as gp
-        import rioxarray as rio
-        from shapely.geometry import mapping
+        
 
         newself = copy.deepcopy(self)
         if 'gen_observation_field' in dir(self):
@@ -205,8 +215,7 @@ class Rainfall(object):
 
         """
 
-        import shapefile
-        import pyproj
+        
 
         # without extension
         shp = shape_file + ".shp"
@@ -286,10 +295,10 @@ class Observation(Rainfall):
 
 
         """
-        import xarray as xr
+        
         self.obs = xr.open_dataset(self.file)
 
-        import numpy as np
+        
 
         # adding the actual cooridnates to the xarray
         # creating a new list with the actual coordinates
@@ -331,9 +340,7 @@ class Observation(Rainfall):
 
         """
 
-        import datetime as dt
-        import pandas as pd
-        import matplotlib.pyplot as plt
+        
 
         # defining the time variable 
         window = dt.datetime(date_time[0], date_time[1], date_time[2], date_time[3])
@@ -368,7 +375,7 @@ class Forecast(Rainfall):
 
     def __init__(self, forecast_file, forecast_cycle, horizon):
 
-        import xarray as xr
+        
         self.fr = xr.open_dataset(forecast_file)
         self.cyc = forecast_cycle
         self.wnd = horizon
@@ -385,8 +392,7 @@ class Forecast(Rainfall):
 
         """
 
-        import numpy as np
-        import datetime as dt
+        
         # adding the actual cooridnates to the xarray
         # creating a new list with the actual coordinates
         l_lat = np.linspace(self.fr.latitude.min(), self.fr.latitude.max(), len(self.fr['lat'])).tolist()
@@ -448,9 +454,7 @@ class Forecast(Rainfall):
 
         """
 
-        import datetime as dt
-        import numpy as np
-        import matplotlib.pyplot as plt
+       
 
         # defining the time variable 
         window = dt.datetime(date_time[0], date_time[1], date_time[2], date_time[3])
@@ -496,7 +500,7 @@ class Deterministic_run(Forecast):
 
 
         """
-        import xarray as xr
+        
 
         if self.dssid == 0:
             ds = self.gen_dataset()
@@ -537,7 +541,7 @@ class Ensemble_run(Forecast):
 
 
         """
-        import copy
+        
 
 
         if self.dssid != 55:
@@ -592,7 +596,7 @@ class Ensemble_run(Forecast):
 
         """
 
-        import copy
+        
 
         # this prevents overwriting the original data object
         oper_self = copy.deepcopy(self)
@@ -622,7 +626,7 @@ class Ensemble_run(Forecast):
             rectangular grid bounded by the indicated coordinates.
 
         """
-        import copy
+        
 
         # this prevents overwriting the original data object
         oper_self = copy.deepcopy(self)
@@ -643,11 +647,7 @@ class Ensemble_run(Forecast):
 
     def eps_extract_by_shp(self, shapefile):
 
-        import copy
-        import geopandas as gp
-        import rioxarray as rio
-        from shapely.geometry import mapping
-        import numpy as np
+        
         # this prevents overwriting the original data object
         oper_self = copy.deepcopy(self)
         # ds = oper_self.gen_dataset()
@@ -679,7 +679,7 @@ class Ensemble_run(Forecast):
 class Runoff(object):
 
     def __init__(self, forecast_file):
-        import xarray as xr
+        
         self.fr = xr.open_dataset(forecast_file)
         
        
@@ -716,7 +716,7 @@ class R_Forecast(Runoff):
         
     def gen_quantiles(self, averaging):
         
-        import copy
+        
         newself = copy.deepcopy(self)
         ds = newself.fr
         

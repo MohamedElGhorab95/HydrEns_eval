@@ -4,6 +4,11 @@ Created on Wed Apr 26 16:23:18 2023
 
 @author: M Elghorab
 """
+import xskillscore as xs
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
 
 class ROC(object):
     def __init__(self, observation_object, forecast_object):
@@ -41,8 +46,7 @@ class ROC(object):
 
         '''
         
-        import xskillscore as xs
-        import numpy as np
+       
         
         # creating bins to categorize the data
         # get the upper and lower bounds of the rainfall fields
@@ -72,8 +76,7 @@ class ROC(object):
 
         '''
         
-        import matplotlib.pyplot as plt
-        import seaborn as sns
+       
         sns.set_theme(style="whitegrid")
         
         fig, ax = plt.subplots()

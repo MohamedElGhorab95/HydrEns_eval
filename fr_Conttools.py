@@ -1,3 +1,7 @@
+import numpy as np
+import xskillscore as xs
+
+
 class CONT(object):
 
     def __init__(self, forecast_object, observation_object, forecast_threshold, observation_threshold=None):
@@ -22,8 +26,7 @@ class CONT(object):
 
         '''
 
-        import numpy as np
-        import xskillscore as xs
+     
 
         # checking if the inputs are objects with fields or not i.e. checking if they already have an array(field) attribure
 
