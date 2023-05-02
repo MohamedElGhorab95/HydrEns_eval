@@ -4,9 +4,7 @@ Created on Sun Apr  9 19:31:52 2023
 @author: M Elghorab
 """
 import copy
-
 import pandas as pd
-
 import geopandas as gp
 import rioxarray as rio
 from shapely.geometry import mapping
