@@ -16,7 +16,7 @@ It also works with ensemble datasets, and provides visual comparisons and contin
 ![HydrEns_eval](https://user-images.githubusercontent.com/97175071/235663636-2d083277-5818-40f8-a775-cf79f64ec4b1.png)
 
 # fr_to_netcdf_tools.py
-This module includes all the functions to convert between the .grib files by the DWD to netCDF format, to be later used as input for the other modules.
+This module includes all the functions to convert from the .grib files by the DWD to netCDF format, to be later used as input for the other modules.
 # fr_entities_tools.py
 This module includes all the forecast and observation objects and methods to be used for evaluation.
 # fr_Conttools.py
