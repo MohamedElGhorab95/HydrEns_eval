@@ -22,3 +22,8 @@ The modules are based on :
 This package is exclusively handling the data provided by the german weatherservice (DWD).
 
 """
+
+# import fr_Conttools
+# import fr_entities_tools
+# import fr_ROCtools
+# import fr_to_netcdf_tools
