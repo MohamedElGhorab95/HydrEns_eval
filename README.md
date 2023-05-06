@@ -13,7 +13,8 @@ It also works with ensemble datasets, and provides visual comparisons and contin
         * rioxarray package         V 0.14.01
         * pandas                    V 1.04.00
 # Structure
-![HydrEns_eval](https://user-images.githubusercontent.com/97175071/235737419-6c068f35-27a3-4e6e-be07-35249f998f3e.png)
+![HydrEns_eval (1)](https://user-images.githubusercontent.com/97175071/236622116-d2336666-1a06-4a75-b05b-1f8edcb09327.png)
+
 
 
 # fr_to_netcdf_tools.py
