@@ -274,6 +274,28 @@ class Rainfall(object):
         return oper_self.extract_by_coords(latmin - 0.05, latmax + 0.05, lonmin - 0.05, lonmax + 0.05)
 
 
+    def limit_to_time(self, start_datetime, end_datetime):
+        '''
+        This method extracts a sub part of the data based on the specified time window.
+        
+        Parameters
+        ----------
+        start_datetime : iterable (list, tuple)
+            iterable with the following format (YYYY, M, D,H).
+        end_datetime : iterable (list, tuple)
+            iterable with the following format (YYYY, M, D,H).
+
+        '''
+        
+        oper_self = copy.deepcopy(self)
+        
+        strt = dt.datetime(start_datetime[0], start_datetime[1], start_datetime[2], start_datetime[3])
+        endt = dt.datetime(end_datetime[0], end_datetime[1], end_datetime[2], end_datetime[3])
+        
+        oper_self.arr = oper_self.arr.sel(time=slice(strt, endt))
+        
+        return oper_self
+
 # =================================================================================================================        
 # =================================================================================================================
 # =================================================================================================================
@@ -281,7 +303,7 @@ class Rainfall(object):
 
 class Observation(Rainfall):
 
-    def __init__(self, observation_file, horizon):
+    def __init__(self, observation_file, horizon = None):
         self.file = observation_file
         self.wnd = horizon
 
@@ -314,8 +336,9 @@ class Observation(Rainfall):
         # fixing the time coordinates from 00:50 to 01:00 by ceiling to the nearest 30 minutes
         self.arr['time'] = (self.arr['time'] + np.timedelta64(30, 'm')).astype('datetime64[h]')
 
-        # limiting the observations to the chosen horizon
-        self.arr = self.arr.isel(time=slice(0, self.wnd))
+        if self.wnd != None:        
+            # limiting the observations to the chosen horizon
+            self.arr = self.arr.isel(time=slice(0, self.wnd))
 
         return self
 
@@ -363,6 +386,38 @@ class Observation(Rainfall):
 
         return
 
+
+    def ident_event(self, threshold):
+        '''
+        This method returns the timesteps where the observation has a value
+        that exceeds (or equals to) a certain given threshold
+
+        Parameters
+        ----------
+        threshold : float
+            rainfall threshold in mm/hr.
+
+        Returns
+        -------
+        formatted_time : list
+            list of pandas time stamps.
+
+        '''
+        
+        # create a boolean array where values > threshold are True and others are False
+        ev_trfl = self.arr >= threshold
+        times = []
+        formatted_time = []
+        for t in ev_trfl.time:
+            if True in ev_trfl.sel(time =t):
+                times.append(t.values)
+        for t in times:
+            
+            ft = pd.to_datetime(str(t)) 
+            formatted_time.append(ft)
+            
+            
+        return formatted_time
 
 # =================================================================================================================        
 # =================================================================================================================
@@ -876,13 +931,16 @@ if __name__ == '__main__':
     #test_EPS()
     
     
-    q = R_Forecast("D:/Erasmus_FRM/05.Masterarbeit/02.Daten/01.Runoff_data/forecast_system/ForData/202207052008/2022070518_5371823_Geising1_WeisseMueglitz_data.nc").gen_quantiles(95)
-    obs = R_Observation("D:/Erasmus_FRM/05.Masterarbeit/02.Daten/01.Runoff_data/forecast_system/ForData/202207052008/2022070518_5371823_Geising1_WeisseMueglitz_data.nc").gen_obs()
+    # q = R_Forecast("D:/Erasmus_FRM/05.Masterarbeit/02.Daten/01.Runoff_data/forecast_system/ForData/202207052008/2022070518_5371823_Geising1_WeisseMueglitz_data.nc").gen_quantiles(95)
+    # obs = R_Observation("D:/Erasmus_FRM/05.Masterarbeit/02.Daten/01.Runoff_data/forecast_system/ForData/202207052008/2022070518_5371823_Geising1_WeisseMueglitz_data.nc").gen_obs()
     
     
+    radar = Observation("D:/Erasmus_FRM/05.Masterarbeit/03.Bearbeitung/02.netCDFs/RadolanRw/radRW_05_10_09_22.nc").gen_observation_field()
+    
+    rad_sm = radar.limit_to_time((2022,9,6,12), (2022,9,7,16))
 
-
-
+    print(radar.ident_event(10))
+    print(rad_sm.ident_event(10))
 
 
 

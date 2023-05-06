@@ -245,31 +245,31 @@ def radolantoNetCDF(radolan_times, datafolder, idx_lon, idx_lat, outputfile):
 # ==============================================================================
 
 
-# if __name__ == '__main__':
+if __name__ == '__main__':
 
 
 # reading the files and exporting 
 
 # getting all datapoint indices covering the extents of Radolan-RW raster for
 # Sachsen after WGS84 > lat 50.1 - 51.8 | long 11.7 - 15.2 <
-# lon, lat, id_lon, id_lat = target(50.1,51.8,11.7,15.2,"radolanrx",version=4)
+    lon, lat, id_lon, id_lat = target(50.1,51.8,11.7,15.2,"radolanrx",version=4)
 
-# fortime = timeframe((2021,7,14,0), (2021,7,16,0), "forecast")
+    fortime = timeframe((2022,9,9,0), (2022,9,10,0), "forecast")
 
-# radtime = timeframe((2021,7,14,0), (2021,7,15,0), "radar")
+    radtime = timeframe((2022,9,5,0), (2022,9,10,0), "radar")
 
 
-# radolantoNetCDF(radtime, datafolder="Test/RadolanRW",
-#                 idx_lon=id_lon, idx_lat=id_lat, 
-#                 outputfile="radRW_test_juli21.nc")
-
-# IconD2toNetCDF(ST=fortime,datafolder="Test/IconD2",
-#                longitude=lon,
-#                latitude=lat,
-#                nearestpoints="Sachsen_nearestpoints.npz",
-#                outputfile="icond2_3test_juli21.nc")
-
-# IconD2EPStoNetCDF(fortime, "Test/IconD2EPS",
-#                   lon, lat,
-#                   "Sachsen_nearestpoints.npz",
-#                   "icond2eps_3_juli21.nc")
+    # radolantoNetCDF(radtime, datafolder="//vs-grp08.zih.tu-dresden.de/hwstore/RadolanRW/202209",
+    #                 idx_lon=id_lon, idx_lat=id_lat, 
+    #                 outputfile="D:/Erasmus_FRM/05.Masterarbeit/03.Bearbeitung/02.netCDFs/RadolanRw/radRW_05_10_09_22.nc")
+    
+    # IconD2toNetCDF(ST=fortime,datafolder="//vs-grp08.zih.tu-dresden.de/hwstore/IconD2/tot_prec/202209",
+    #                 longitude=lon,
+    #                 latitude=lat,
+    #                 nearestpoints="D:/Erasmus_FRM/05.Masterarbeit/03.Bearbeitung/01.Code/WorkspaceSachsen_nearestpoints.npz",
+    #                 outputfile="D:/Erasmus_FRM/05.Masterarbeit/03.Bearbeitung/02.netCDFs/Icond2/icond2__05_10_09_22.nc")
+    
+    IconD2EPStoNetCDF(fortime, "//vs-grp08.zih.tu-dresden.de/hwstore/IconD2eps/tot_prec/202209",
+                      lon, lat,
+                      "D:/Erasmus_FRM/05.Masterarbeit/03.Bearbeitung/01.Code/WorkspaceSachsen_nearestpoints.npz",
+                      "D:/Erasmus_FRM/05.Masterarbeit/03.Bearbeitung/02.netCDFs/Icond2EPS/icond2eps__09_10_09_22.nc")
