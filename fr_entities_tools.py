@@ -215,10 +215,13 @@ class Rainfall(object):
         """
 
         
-
-        # without extension
-        shp = shape_file + ".shp"
-        prj = shape_file + ".prj"
+        if ".shp" in shape_file == False:
+            # without extension
+            shp = shape_file + ".shp"
+            prj = shape_file + ".prj"
+        else:
+            shp = shape_file
+            prj = shape_file.replace(".shp",".prj")
 
         # Open the shapefile
         sf = shapefile.Reader(shp)
@@ -304,7 +307,7 @@ class Rainfall(object):
         Parameters
         ----------
         output_path_name : str
-            path and name of the file ending with .tif
+            path and name of the file without ending with .tif
             .
         '''
         # set the profile for the output file
@@ -323,9 +326,13 @@ class Rainfall(object):
                                             self.arr.sizes['lon'], 
                                             self.arr.sizes['lat'])}
             # write the data array to the output file
-        with rasterio.open(output_path_name, 'w', **profile) as dst:
-            dst.write(self.arr.isel(time=5).values, 1)
-        
+        for t in range(len(self.arr.time.values)):
+           # timestep for the file name
+            n = self.arr.time.values[t] 
+            with rasterio.open(output_path_name + "{}".format(str(n)[:-16]) + ".tif", 'w', **profile) as dst:
+                dst.write(self.arr.isel(time=t).values, 1)
+                
+        return
         
 
 # =================================================================================================================        
@@ -1003,7 +1010,7 @@ if __name__ == '__main__':
     #print(radar.ident_event(10))
     #print(rad_sm.ident_event(10))
 
-    rad_sm.to_raster("rad4.tif")
+    rad_sm.extract_by_shp("C:/Project/shp/WeiseElster/OelsnitzTEZG_DHDN.shp").to_raster("radar")
 
     rad_sm.arr.isel(time=5).plot()
 
