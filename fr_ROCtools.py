@@ -50,8 +50,8 @@ class ROC(object):
         
         # creating bins to categorize the data
         # get the upper and lower bounds of the rainfall fields
-        upper = max(self.forecast_array.max(),self.observation_array.max())
-        lower = min(self.forecast_array.min(),self.observation_array.min())
+        upper = max(self.forecast_array.max(skipna=True),self.observation_array.max(skipna=True)).values
+        lower = min(self.forecast_array.min(skipna=True),self.observation_array.min(skipna=True)).values
         bins = 4
         bin_width = (upper-lower)/bins
         

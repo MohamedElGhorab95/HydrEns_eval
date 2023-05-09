@@ -15,6 +15,7 @@ import numpy as np
 import datetime as dt
 import matplotlib.pyplot as plt
 from shapely.geometry import mapping
+import rasterio
 
 
 class Rainfall(object):
@@ -214,10 +215,13 @@ class Rainfall(object):
         """
 
         
-
-        # without extension
-        shp = shape_file + ".shp"
-        prj = shape_file + ".prj"
+        if ".shp" in shape_file == False:
+            # without extension
+            shp = shape_file + ".shp"
+            prj = shape_file + ".prj"
+        else:
+            shp = shape_file
+            prj = shape_file.replace(".shp",".prj")
 
         # Open the shapefile
         sf = shapefile.Reader(shp)
@@ -296,6 +300,41 @@ class Rainfall(object):
         
         return oper_self
 
+    def to_raster(self, output_path_name):
+        '''
+        This method exports the data array to a raster file
+        
+        Parameters
+        ----------
+        output_path_name : str
+            path and name of the file without ending with .tif
+            .
+        '''
+        # set the profile for the output file
+        profile = {
+            'driver': 'GTiff',
+            'dtype': self.arr.dtype,
+            'nodata': 999999,
+            'width': self.arr.sizes['lon'],
+            'height': self.arr.sizes['lat'],
+            'count': 1,
+            'crs': 'EPSG:4326',
+            'transform': rasterio.transform.from_bounds(self.arr.lon.values[0], 
+                                            self.arr.lat.values[-1], 
+                                            self.arr.lon.values[-1], 
+                                            self.arr.lat.values[0], 
+                                            self.arr.sizes['lon'], 
+                                            self.arr.sizes['lat'])}
+            # write the data array to the output file
+        for t in range(len(self.arr.time.values)):
+           # timestep for the file name
+            n = self.arr.time.values[t] 
+            with rasterio.open(output_path_name + "{}".format(str(n)[:-16]) + ".tif", 'w', **profile) as dst:
+                dst.write(self.arr.isel(time=t).values, 1)
+                
+        return
+        
+
 # =================================================================================================================        
 # =================================================================================================================
 # =================================================================================================================
@@ -342,17 +381,25 @@ class Observation(Rainfall):
 
         return self
 
+    
+    def plot_all(self):
+        
+        array = self.rtrn_arr()
+        
+        for t in array.time:
+            capture = array.sel(time=t)
+            plt.figure()  # to avoid plotting figures on top of each other
+            capture.plot(vmin=0, vmax=14.5)
+            plt.title('Observation time\n {}'.format(str(t.values)[:-13]))
+
+        return
+    
     def plot(self, date_time):
         """
         This method plots the rainfall field for the extents of the data array 
         at the defined timestep
 
-        Parameters
-        ----------
-
-        date_time : iterable
-            exact date and time to be plotted
-            in the format of (YYYY,M,D,H).
+        
 
         Returns
         -------
@@ -535,6 +582,27 @@ class Forecast(Rainfall):
         capture.plot(vmin=0, vmax=14.5)
 
         plt.title('Date/ Time: {}  \n Forecast released: {}'.format(window, formatted_releasedate))
+
+        return
+    
+    
+    def plot_all(self, averaging_method=None):
+        
+        try:
+            array = self.arr
+        except:
+            array = self.preplot(averaging_method)
+        
+        # extract forecast release time
+        release = array.start_time.values
+        formatted_releasedate = np.datetime_as_string(release, unit='s').replace('T', ' ').replace('-', '/')
+
+        
+        for t in array.time:
+            capture = array.sel(time=t)
+            plt.figure()  # to avoid plotting figures on top of each other
+            capture.plot(vmin=0, vmax=14.5)
+            plt.title('Date/ Time: {}  \n Forecast released: {}'.format(str(t.values)[:-13],formatted_releasedate))
 
         return
 
@@ -939,8 +1007,12 @@ if __name__ == '__main__':
     
     rad_sm = radar.limit_to_time((2022,9,6,12), (2022,9,7,16))
 
-    print(radar.ident_event(10))
-    print(rad_sm.ident_event(10))
+    #print(radar.ident_event(10))
+    #print(rad_sm.ident_event(10))
+
+    rad_sm.extract_by_shp("C:/Project/shp/WeiseElster/OelsnitzTEZG_DHDN.shp").to_raster("radar")
+
+    rad_sm.arr.isel(time=5).plot()
 
 
 
