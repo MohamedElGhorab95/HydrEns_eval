@@ -62,8 +62,10 @@ class ROC(object):
            self.pofd, self.pod, auc = xs.roc(self.observation_array, self.forecast_array, bin_edges= category_edges,dim='time' ,return_results='all_as_tuple')
         else:
             # auc globally
-           self.pofd, self.pod, auc = xs.roc(self.observation_array, self.forecast_array, bin_edges= category_edges,dim=['time','lat','lon'] ,return_results='all_as_tuple')
-        
+            if "lat" in self.observation_array.coords:
+                self.pofd, self.pod, auc = xs.roc(self.observation_array, self.forecast_array, bin_edges= category_edges,dim=['time','lat','lon'] ,return_results='all_as_tuple')
+            else:
+                self.pofd, self.pod, auc = xs.roc(self.observation_array, self.forecast_array, bin_edges= category_edges,dim=['time'] ,return_results='all_as_tuple')
         
         return auc
     
