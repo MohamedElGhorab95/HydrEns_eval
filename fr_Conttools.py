@@ -70,10 +70,10 @@ class CONT(object):
         # checking whether the data is one or two dimensional before creating the table
 
         if len(self.observation_array.coords) > 1 and "lat" in self.observation_array.coords:  # 2Dimensional data
-            self.tab = xs.Contingency(bol_fr, bol_obs, cat_eds, cat_eds, dim=['lat', 'lon', 'time'])
+            self.tab = xs.Contingency( bol_obs,bol_fr, cat_eds, cat_eds, dim=['lat', 'lon', 'time'])
 
         else:
-            self.tab = xs.Contingency(bol_fr, bol_obs, cat_eds, cat_eds, dim=['time'])
+            self.tab = xs.Contingency( bol_obs,bol_fr, cat_eds, cat_eds, dim=['time'])
 
     # =============================================================================================================================
 
