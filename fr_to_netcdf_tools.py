@@ -270,7 +270,7 @@ if __name__ == '__main__':
     #                 nearestpoints="D:/Erasmus_FRM/05.Masterarbeit/03.Bearbeitung/01.Code/WorkspaceSachsen_nearestpoints.npz",
     #                 outputfile="D:/Erasmus_FRM/05.Masterarbeit/03.Bearbeitung/02.netCDFs/Icond2/icond2__05_10_09_22.nc")
     
-    IconD2EPStoNetCDF(fortime, "//vs-grp08.zih.tu-dresden.de/hwstore/IconD2eps/tot_prec/202209",
-                      lon, lat,
-                      "D:/Erasmus_FRM/05.Masterarbeit/03.Bearbeitung/01.Code/WorkspaceSachsen_nearestpoints.npz",
-                      "D:/Erasmus_FRM/05.Masterarbeit/03.Bearbeitung/02.netCDFs/Icond2EPS/icond2eps__09_10_09_22.nc")
+    # IconD2EPStoNetCDF(fortime, "//vs-grp08.zih.tu-dresden.de/hwstore/IconD2eps/tot_prec/202209",
+    #                   lon, lat,
+    #                   "D:/Erasmus_FRM/05.Masterarbeit/03.Bearbeitung/01.Code/WorkspaceSachsen_nearestpoints.npz",
+    #                   "D:/Erasmus_FRM/05.Masterarbeit/03.Bearbeitung/02.netCDFs/Icond2EPS/icond2eps__09_10_09_22.nc")
