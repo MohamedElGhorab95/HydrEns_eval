@@ -473,7 +473,7 @@ class Observation(Rainfall):
 
 class Forecast(Rainfall):
 
-    def __init__(self, forecast_file, forecast_cycle, horizon):
+    def __init__(self, forecast_file, forecast_cycle, horizon=48):
 
         
         self.fr = xr.open_dataset(forecast_file)
