@@ -612,8 +612,8 @@ class Forecast(Rainfall):
 
 class Deterministic_run(Forecast):
 
-    def __init__(self, forecast_file, forecast_cycle, horizon):
-        Forecast.__init__(self, forecast_file, forecast_cycle, horizon)
+    def __init__(self, forecast_file, forecast_cycle, horizon=48):
+        Forecast.__init__(self, forecast_file, forecast_cycle, horizon=48)
 
     def gen_deterministic_field(self):
         """
@@ -641,8 +641,8 @@ class Deterministic_run(Forecast):
 
 class Ensemble_run(Forecast):
 
-    def __init__(self, forecast_file, forecast_cycle, horizon):
-        Forecast.__init__(self, forecast_file, forecast_cycle, horizon)
+    def __init__(self, forecast_file, forecast_cycle, horizon=48):
+        Forecast.__init__(self, forecast_file, forecast_cycle, horizon=48)
         self.dssid = 'eps_dataset'
 
     def gen_ensemble_field(self, averaging):
