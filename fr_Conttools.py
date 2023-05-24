@@ -1,5 +1,7 @@
 import numpy as np
+import xarray as xr
 import xskillscore as xs
+
 
 
 class CONT(object):
@@ -8,7 +10,7 @@ class CONT(object):
         '''
         Parameters
         ----------
-        forecast_array : xarray data array
+        forecast_object : forecast type data
             forecast data array.
         observation_object :observation type data
             observation data array.
@@ -26,21 +28,28 @@ class CONT(object):
 
         '''
 
-     
+         # checking whether the data is xarray type
+         
+        if isinstance(forecast_object,xr.DataArray):
+             self.forecast_array = forecast_object
+        else:
 
         # checking if the inputs are objects with fields or not i.e. checking if they already have an array(field) attribure
 
-        if 'arr' in dir(forecast_object):
-            self.forecast_array = forecast_object.rtrn_arr()
+            if 'arr' in dir(forecast_object):
+                self.forecast_array = forecast_object.rtrn_arr()
+    
+            if 'gen_deterministic_field' in dir(forecast_object):
+                if forecast_object.dssid == 0:
+                    self.forecast_array = forecast_object.gen_deterministic_field().rtrn_arr()
 
-        if 'gen_deterministic_field' in dir(forecast_object):
-            if forecast_object.dssid == 0:
-                self.forecast_array = forecast_object.gen_deterministic_field().rtrn_arr()
-
-        if 'arr' in dir(observation_object):
-            self.observation_array = observation_object.rtrn_arr()
+        if isinstance(observation_object,xr.DataArray):
+             self.observation_array = observation_object
         else:
-            self.observation_array = observation_object.gen_observation_field().rtrn_arr()
+            if 'arr' in dir(observation_object):
+                self.observation_array = observation_object.rtrn_arr()
+            else:
+                self.observation_array = observation_object.gen_observation_field().rtrn_arr()
 
         self.observation_threshold = observation_threshold
         self.forecast_threshold = forecast_threshold

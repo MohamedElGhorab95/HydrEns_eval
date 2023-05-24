@@ -4,6 +4,7 @@ Created on Wed Apr 26 16:23:18 2023
 
 @author: M Elghorab
 """
+import xarray as xr
 import xskillscore as xs
 import numpy as np
 import matplotlib.pyplot as plt
@@ -13,9 +14,16 @@ import seaborn as sns
 class ROC(object):
     def __init__(self, observation_object, forecast_object):
         
-        
-        self.forecast_array = forecast_object.rtrn_arr()
-        self.observation_array = observation_object.rtrn_arr()
+        if isinstance(forecast_object,xr.DataArray):
+             self.forecast_array = forecast_object
+        else:
+            self.forecast_array = forecast_object.rtrn_arr()
+            
+        if isinstance(observation_object,xr.DataArray):
+             self.observation_array = observation_object
+        else:
+            self.observation_array = observation_object.rtrn_arr()
+       
         self.pod  = () # probability of detection
         self.pofd = () # probability of false detection
         
