@@ -141,7 +141,7 @@ def IconD2toNetCDF(ST, datafolder, longitude, latitude, nearestpoints, outputfil
         icond2.regrid(lon_target=longitude, lat_target=latitude, file_nearest=nearestpoints)
         # exporting to netcdf if no file exists i.e. first forecast cycle
         if x == ST[0]:
-            icond2.export_netcdf(filename=outputfile)
+            icond2.export_netcdf(filename=outputfile, data_kwargs={'compression': 'zlib', 'complevel': 4})
         # appending to the netcdf file
         else:
             icond2.export_netcdf_append(filename=outputfile)
@@ -187,7 +187,7 @@ def IconD2EPStoNetCDF(ST, datafolder, longitude, latitude, nearestpoints, output
         icond2eps.regrid(lon_target=longitude, lat_target=latitude, file_nearest=nearestpoints)
         # exporting to netcdf if no file exists i.e. first forecast cycle
         if x == ST[0]:
-            icond2eps.export_netcdf(filename=outputfile)
+            icond2eps.export_netcdf(filename=outputfile, data_kwargs={'compression': 'zlib', 'complevel': 4})
         else:
             icond2eps.export_netcdf_append(filename=outputfile)
 

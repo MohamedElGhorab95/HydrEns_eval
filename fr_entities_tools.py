@@ -34,6 +34,11 @@ class Rainfall(object):
 
         return self.arr
 
+    def get_tite(self):
+        
+        return self.rtrn_arr().name
+        
+        
     def aggr_spatial(self, scale_factor):
         """
         This method changes the spatial resolution of the Xarray type object.
@@ -67,10 +72,27 @@ class Rainfall(object):
         
         # this prevents overwriting the original data object
         newself = copy.deepcopy(self)
+        
 
-        newself.arr = newself.arr.resample(time="{}H".format(resolution)
-                                           , loffset=pd.Timedelta(hours=resolution)).sum()
+        #newself.arr = newself.arr.resample(time="{}H".format(resolution)
+         #                                  , loffset=pd.Timedelta(hours=resolution)).sum()
 
+        vals = []
+        times = []
+        
+        for i in range(0,len(newself.arr.time),resolution):
+            try:
+                times.append(newself.arr.isel(time=i+resolution-1).time.values)
+                vals.append(newself.arr.isel(time=slice(i, i+resolution)).sum(dim='time'))
+            except:
+               break
+        
+        new_arr = xr.concat(vals, dim='time')
+        new_arr['time'] = times
+
+        # Assign the new DataArray to the modified object and rename it
+        newself.arr = new_arr
+        
         return newself
 
     def avg_areal_prec(self):
@@ -189,7 +211,7 @@ class Rainfall(object):
         clipped = clipped.rename({"y": "lat", "x": "lon"})
 
         newself.arr = clipped
-
+       
         return newself
 
     def shp_extents(self, shape_file):
@@ -275,7 +297,7 @@ class Rainfall(object):
 
         lonmax, lonmin, latmax, latmin = oper_self.shp_extents(shape_file)
 
-        return oper_self.extract_by_coords(latmin - 0.05, latmax + 0.05, lonmin - 0.05, lonmax + 0.05)
+        return oper_self.extract_by_coords(latmin - 0.00625, latmax + 0.00625, lonmin - 0.00625, lonmax + 0.00625)
 
 
     def limit_to_time(self, start_datetime, end_datetime):
@@ -724,7 +746,7 @@ class Ensemble_run(Forecast):
 
         lonmax, lonmin, latmax, latmin = oper_self.shp_extents(shape_file)
 
-        return oper_self.eps_extract_by_coords(latmin - 0.05, latmax + 0.05, lonmin - 0.05, lonmax + 0.05)
+        return oper_self.eps_extract_by_coords(latmin - 0.00625, latmax + 0.00625, lonmin - 0.00625, lonmax + 0.00625)
 
     def eps_extract_by_coords(self, lat_min, lat_max, lon_min, lon_max):
         """

@@ -203,7 +203,7 @@ class CONT(object):
 
     def pss(self):
         '''
-        .. math:: PSS = \\frac{hits}{hits+misses} + \\frac{false~alarms}{false~alarms+correct~negatives}
+        .. math:: PSS = \\frac{hits}{hits+misses} - \\frac{false~alarms}{false~alarms+correct~negatives}
 
         Returns
         -------
@@ -273,9 +273,9 @@ if __name__ == '__main__':
         # cont.far()
         # cont.pod()
         # cont.pofd()
-        # cont.fbias()
-        # cont.csi()
-        # cont.pss()
+        cont.fbias()
+        cont.csi()
+        cont.pss()
 
         return cont.print_cont_tab(), conteps.print_cont_tab(), contav.print_cont_tab(), contepsav.print_cont_tab()
 

@@ -121,10 +121,19 @@ class ROC(object):
 if __name__ == '__main__':
     from HydrEns_eval.fr_entities_tools import *
     
-    rad = Observation("C:/Project/radRW_juli21.nc", 24).gen_observation_field()
-    eps = Ensemble_run("C:/Project/icond2eps_3_juli21.nc", 1, 24).gen_ensemble_field(95)
+    # rad = Observation("C:/Project/radRW_juli21.nc", 24).gen_observation_field()
+    # eps = Ensemble_run("C:/Project/icond2eps_3_juli21.nc", 1, 24).gen_ensemble_field(95)
     
-    roc = ROC(eps, rad)
+    # roc = ROC(eps, rad)
+    # area = roc.roc_auc()
+    # roc.plot_roc()
+    
+    mugliz = "D:/Erasmus_FRM/05.Masterarbeit/03.Bearbeitung/01.Code/Workspace/shp/Mugliz/mugliz_cats"
+    rad = Observation("C:/Project/radRW_juli21.nc", 24).limit_to_shp(mugliz+".shp")
+    rad.arr.isel(time=5).plot()
+    
+    eps = Ensemble_run("C:/Project/icond2eps_3_juli21.nc", 1, 24).eps_accelerate_by_shp(mugliz+".shp").gen_ensemble_field(95)
+    eps.arr.isel(time=5).plot()
+    roc = ROC(rad,eps)
     area = roc.roc_auc()
     roc.plot_roc()
-    
