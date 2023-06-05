@@ -60,7 +60,7 @@ class ROC(object):
         # get the upper and lower bounds of the rainfall fields
         upper = max(self.forecast_array.max(skipna=True),self.observation_array.max(skipna=True)).values
         lower = min(self.forecast_array.min(skipna=True),self.observation_array.min(skipna=True)).values
-        bins = 4
+        bins = 29
         bin_width = (upper-lower)/bins
         
         category_edges = np.arange(lower, upper + bin_width, bin_width)
