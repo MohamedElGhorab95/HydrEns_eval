@@ -34,7 +34,7 @@ class Rainfall(object):
 
         return self.arr
 
-    def get_tite(self):
+    def get_title(self):
         
         return self.rtrn_arr().name
         
@@ -107,11 +107,11 @@ class Rainfall(object):
         # this prevents overwriting the original data object
         newself = copy.deepcopy(self)
 
-        if type(self) == Ensemble_run:
+        if (type(self) == Ensemble_run) or (type(self) == Deterministic_run):
             try:
-                newself.arr = newself.arr.mean(('lon', 'lat'))
+                newself.average = newself.arr.mean(('lon', 'lat'))
             except:
-                newself.fr = newself.fr.mean(('lon', 'lat'))
+                newself.average = newself.fr.mean(('lon', 'lat'))
 
 
         elif 'arr' in dir(self):
@@ -166,7 +166,7 @@ class Rainfall(object):
         ilat = rf.arr.indexes['lat'].get_indexer([lat_min, lat_max], method='nearest').tolist()
 
         # slicing the data array
-        newself.arr = newself.arr.isel(lat=slice(ilat[0], ilat[1]),
+        newself.arr = newself.arr.isel(lat=slice(ilat[1], ilat[0]), # lat is reversed to match the convention of xarray
                                        lon=slice(ilon[0], ilon[1]))
 
         return newself
@@ -205,7 +205,7 @@ class Rainfall(object):
         da = rf.arr.rio.write_crs("EPSG:4326")
         da = da.rename({"lat": 'y', 'lon': 'x'})
 
-        shp = gp.read_file(shapefile)
+        shp = gp.read_file(shapefile+'.shp')
 
         clipped = da.rio.clip(shp.geometry.apply(mapping), shp.crs)
         clipped = clipped.rename({"y": "lat", "x": "lon"})
@@ -237,7 +237,8 @@ class Rainfall(object):
         """
 
         
-        if ".shp" in shape_file == False:
+        if not shape_file.endswith(".shp"):
+            
             # without extension
             shp = shape_file + ".shp"
             prj = shape_file + ".prj"
@@ -367,7 +368,9 @@ class Observation(Rainfall):
     def __init__(self, observation_file, horizon = None):
         self.file = observation_file
         self.wnd = horizon
-
+        
+        
+        
     def gen_observation_field(self):
         """
         This method generates an observation xarray from the netCDF file and 
@@ -378,12 +381,16 @@ class Observation(Rainfall):
         """
         
         self.obs = xr.open_dataset(self.file)
-
         
+        
+        # self.obs = self.obs.reindex(lat=self.obs['lat'][::-1])
+               
 
         # adding the actual cooridnates to the xarray
         # creating a new list with the actual coordinates
-        l_lat = np.linspace(self.obs.latitude.min(), self.obs.latitude.max(), len(self.obs['lat'])).tolist()
+       # # xarray flips the coordinates when opening the dataset
+       # # max to min in the latitude to rearrange the data to its correct location
+        l_lat = np.linspace(self.obs.latitude.max(), self.obs.latitude.min(), len(self.obs['lat'])).tolist()
         l_lon = np.linspace(self.obs.longitude.min(), self.obs.longitude.max(), len(self.obs['lon'])).tolist()
         # assigning the actual coordinates
         self.obs = self.obs.assign_coords(lat=l_lat, lon=l_lon)
@@ -400,6 +407,8 @@ class Observation(Rainfall):
         if self.wnd != None:        
             # limiting the observations to the chosen horizon
             self.arr = self.arr.isel(time=slice(0, self.wnd))
+            
+      
 
         return self
 
@@ -502,7 +511,9 @@ class Forecast(Rainfall):
         self.cyc = forecast_cycle
         self.wnd = horizon
         self.dssid = 0
-
+        self.average = 0
+        self.original = self.gen_dataset()
+        
     def gen_dataset(self):
         """
         This method generates the dataset built on the indicated forecast cycle and horizon.
@@ -517,7 +528,7 @@ class Forecast(Rainfall):
         
         # adding the actual cooridnates to the xarray
         # creating a new list with the actual coordinates
-        l_lat = np.linspace(self.fr.latitude.min(), self.fr.latitude.max(), len(self.fr['lat'])).tolist()
+        l_lat = np.linspace(self.fr.latitude.max(), self.fr.latitude.min(), len(self.fr['lat'])).tolist()
         l_lon = np.linspace(self.fr.longitude.min(), self.fr.longitude.max(), len(self.fr['lon'])).tolist()
         # assigning the actual coordinates
         self.fr = self.fr.assign_coords(lat=l_lat, lon=l_lon)
@@ -543,14 +554,14 @@ class Forecast(Rainfall):
         # referencing the time coordinate based on the forecast release time as its starting point
         self.fr = self.fr.assign_coords({'time': self.fr.time + self.fr.start_time})
 
-        self.dssid = 1
+        
         return self.fr
 
     def preplot(self, avgd):
 
-        if 'gen_ensemble_field' in dir(self):
+        if 'gen_quantiles' in dir(self):
 
-            array = self.gen_ensemble_field(avgd).rtrn_arr()
+            array = self.gen_quantiles(avgd).rtrn_arr()
         else:
 
             array = self.gen_deterministic_field().rtrn_arr()
@@ -655,6 +666,9 @@ class Deterministic_run(Forecast):
         self.arr = xr.DataArray(ds[name])
         self.arr = self.arr.rename("rainfall forecast | deterministic run")
 
+        self.dssid = 1
+        
+        
         return self
 
 
@@ -665,9 +679,15 @@ class Ensemble_run(Forecast):
 
     def __init__(self, forecast_file, forecast_cycle, horizon=48):
         Forecast.__init__(self, forecast_file, forecast_cycle, horizon=48)
-        self.dssid = 'eps_dataset'
+        self.dssid = 2
 
-    def gen_ensemble_field(self, averaging):
+    
+
+    def get_ensemble_members(self):
+        
+        return self.fr
+
+    def gen_quantiles(self, averaging):
         """
         This method generates the datarray built on the indicated forecast cycle and horizon.
 
@@ -686,14 +706,21 @@ class Ensemble_run(Forecast):
         """
         
 
-
-        if self.dssid != 55:
-            newself = copy.deepcopy(self)
-            ds = newself.gen_dataset()
+        # check if the members are areal averages or spatially distribured
+        # if len(self.fr.dims) > 1 and self.dssid != 2.1:
+        #     ds = self.gen_dataset().fr
+        # else:
+        #     ds = self.fr
+        
+        newself = copy.deepcopy(self)
+        
+        if self.average !=0:
+            ds = self.average
         else:
-            newself = copy.deepcopy(self)
-            ds = newself.fr
-
+            ds = copy.deepcopy(self.original)
+        
+        
+        
         if averaging == 'mean':
             # calculate ensemble mean
             mean = ds.to_array(dim='new').mean(dim='new', skipna=True)
@@ -719,7 +746,15 @@ class Ensemble_run(Forecast):
             # extracting the mean variable to a dataXarray and renaming it
             newself.arr = ds.ensemble_val.rename("EPS rainfall forecast | {}th percentile".format(averaging))
 
+        
+        
         return newself
+
+    
+
+    def get_ens_quantiles(self):
+        
+        return self.arr
 
     def eps_accelerate_by_shp(self, shape_file):
         """
@@ -772,44 +807,48 @@ class Ensemble_run(Forecast):
         
 
         # this prevents overwriting the original data object
-        oper_self = copy.deepcopy(self)
-        ds = oper_self.gen_dataset()
+        # oper_self = copy.deepcopy(self)
+        # ds = oper_self.gen_dataset().fr
+        # # ds = oper_self.fr
         newself = copy.deepcopy(self)
+        
+        oper_self = copy.deepcopy(self.original)
 
         # get indexes of the coordinates        
-        ilon = ds.indexes['lon'].get_indexer([lon_min, lon_max], method='nearest').tolist()
-        ilat = ds.indexes['lat'].get_indexer([lat_min, lat_max], method='nearest').tolist()
+        ilon = oper_self.indexes['lon'].get_indexer([lon_min, lon_max], method='nearest').tolist()
+        ilat = oper_self.indexes['lat'].get_indexer([lat_min, lat_max], method='nearest').tolist()
 
         # slicing the data array
 
-        newself.fr = newself.gen_dataset().isel(lat=slice(ilat[0], ilat[1]),
+        newself.fr = oper_self.isel(lat=slice(ilat[1], ilat[0]),  # reversed to match the xarray convention
                                                 lon=slice(ilon[0], ilon[1]))
 
-        newself.dssid = 55
+        # newself.dssid = 2.1
         return newself
 
     def eps_extract_by_shp(self, shapefile):
 
         
         # this prevents overwriting the original data object
-        oper_self = copy.deepcopy(self)
+        oper_self = copy.deepcopy(self.original)
         # ds = oper_self.gen_dataset()
-        ds = oper_self.arr
+        # ds = oper_self.arr
+        ds = oper_self
         newself = copy.deepcopy(self)
 
         da = ds.rio.write_crs("EPSG:4326")
         da = da.rename({"lat": 'y', 'lon': 'x'})
 
         # reading the shapefile
-        shp = gp.read_file(shapefile)
+        shp = gp.read_file(shapefile+'.shp')
 
         clipped = da.rio.clip(shp.geometry.apply(mapping), shp.crs)
         clipped = clipped.rename({"y": "lat", "x": "lon"})
 
-        newself.arr = clipped
+        newself.fr = clipped
         # newself.fr = clipped
 
-        newself.dssid = 55
+        # newself.dssid = 2.1
 
         return newself
 
@@ -982,20 +1021,20 @@ if __name__ == '__main__':
         """
 
         # generate the forecast object
-        eps = Ensemble_run("C:/Project/icond2eps_3_juli21.nc", 1, 12)
+        eps = Ensemble_run("C:/Project/icond2eps_3_juli21.nc", 1)
         # generating a rainfall field for a specific quantile
         # only needed for manual low level operations, however if the object is to be 
         # used in other classes (Cont, ROC) it gets generated automatically
-        eps95 = eps.gen_ensemble_field(95)  # 95th quantile      
-        epsavg = eps.gen_ensemble_field("mean")  # mean
-        epsmed = eps.gen_ensemble_field("median")  # median
+        eps95 = eps.gen_quantiles(95)  # 95th quantile      
+        epsavg = eps.gen_quantiles("mean")  # mean
+        epsmed = eps.gen_quantiles("median")  # median
 
-        # # extracting a part of the forecast using geographical coordinates
-        # # the method eps_accelerate_by_shp is used instead of the general extract_by_coords
-        # # to speed up the calculation process for the smaller areas
-        sub95 = eps.eps_accelerate_by_shp("C:/Project/shp/WeiseElster/OelsnitzTEZG_DHDN").gen_ensemble_field(95)
-        subavg = eps.eps_accelerate_by_shp("C:/Project/shp/WeiseElster/OelsnitzTEZG_DHDN").gen_ensemble_field("mean")
-        submed = eps.eps_accelerate_by_shp("C:/Project/shp/WeiseElster/OelsnitzTEZG_DHDN").gen_ensemble_field("median")
+        # extracting a part of the forecast using geographical coordinates
+        # the method eps_accelerate_by_shp is used instead of the general extract_by_coords
+        # to speed up the calculation process for the smaller areas
+        sub95 = eps.eps_accelerate_by_shp("C:/Project/shp/WeiseElster/OelsnitzTEZG_DHDN").gen_quantiles(95)
+        subavg = eps.eps_accelerate_by_shp("C:/Project/shp/WeiseElster/OelsnitzTEZG_DHDN").gen_quantiles("mean")
+        submed = eps.eps_accelerate_by_shp("C:/Project/shp/WeiseElster/OelsnitzTEZG_DHDN").gen_quantiles("median")
 
         # mean areal rainfall
 
@@ -1005,8 +1044,8 @@ if __name__ == '__main__':
 
         sub_agg = sub95.aggr_spatial(3).aggr_temporal(3)
 
-        # # # the plot method handles plotting ensemble objects,
-        # # however it is recommended to generate the field first then plot
+        # # the plot method handles plotting ensemble objects,
+        # however it is recommended to generate the field first then plot
         eps95.plot([2021, 7, 14, 1])
         epsavg.plot([2021, 7, 14, 1])
         epsmed.plot([2021, 7, 14, 1])
@@ -1016,30 +1055,12 @@ if __name__ == '__main__':
         sub_agg.plot([2021, 7, 14, 3])
 
         return eps95, epsavg, epsmed, m_eps95, m_epsavg, m_epsmed, sub95, subavg, submed, eps
+        
 
-
-    #test_EPS()
+    # test_EPS()
     
-    
-    # q = R_Forecast("D:/Erasmus_FRM/05.Masterarbeit/02.Daten/01.Runoff_data/forecast_system/ForData/202207052008/2022070518_5371823_Geising1_WeisseMueglitz_data.nc").gen_quantiles(95)
-    # obs = R_Observation("D:/Erasmus_FRM/05.Masterarbeit/02.Daten/01.Runoff_data/forecast_system/ForData/202207052008/2022070518_5371823_Geising1_WeisseMueglitz_data.nc").gen_obs()
-    
-    
-    radar = Observation("D:/Erasmus_FRM/05.Masterarbeit/03.Bearbeitung/02.netCDFs/RadolanRw/radRW_05_10_09_22.nc").gen_observation_field()
-    
-    rad_sm = radar.limit_to_time((2022,9,6,12), (2022,9,7,16))
-
-    #print(radar.ident_event(10))
-    #print(rad_sm.ident_event(10))
-
-    rad_sm.extract_by_shp("C:/Project/shp/WeiseElster/OelsnitzTEZG_DHDN.shp").to_raster("radar")
-
-    rad_sm.arr.isel(time=5).plot()
-
-
-
-
-
-
-
-
+eps = Ensemble_run("C:/Project/icond2eps_3_juli21.nc", 1)    
+eps = eps.eps_extract_by_shp("C:/Project/shp/WeiseElster/OelsnitzTEZG_DHDN")
+avg = eps.avg_areal_prec()   
+qs = avg.gen_quantiles(95)
+qs.get_ens_quantiles().plot()

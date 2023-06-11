@@ -78,7 +78,7 @@ def timeframe(start_datetime, end_datetime, product):
         period_step = dt.timedelta(hours=3)
         periods = [start_datetime]
         ct = 0
-        while periods[-1] < end_datetime:
+        while periods[-1] < end_datetime + 7*period_step:
             ct = ct + 1
             periods.append(start_datetime + ct * period_step)
 
@@ -91,7 +91,7 @@ def timeframe(start_datetime, end_datetime, product):
         radolan_times = [start_datetime]
         hour = dt.timedelta(hours=1)
         ct = 0
-        while radolan_times[-1] < end_datetime:
+        while radolan_times[-1] < end_datetime + hour*23:
             ct += 1
             radolan_times.append(start_datetime + ct * hour)
 
@@ -136,12 +136,14 @@ def IconD2toNetCDF(ST, datafolder, longitude, latitude, nearestpoints, outputfil
     # looping over forecast cycle starting times
     for x in ST:
         # read Icon
-        icond2.read_file(x, datafolder)
+        icond2.read_file(x, datafolder, short='int16', scale_factor=0.01, fill_value=-1)
         # gridding the data
         icond2.regrid(lon_target=longitude, lat_target=latitude, file_nearest=nearestpoints)
         # exporting to netcdf if no file exists i.e. first forecast cycle
         if x == ST[0]:
-            icond2.export_netcdf(filename=outputfile, data_kwargs={'compression': 'zlib', 'complevel': 4})
+            icond2.export_netcdf(filename=outputfile, data_kwargs={'compression': 'zlib', 'complevel': 4},
+                                 data_format='i2', scale_factor_nc=0.01, scale_undo=True
+)
         # appending to the netcdf file
         else:
             icond2.export_netcdf_append(filename=outputfile)
@@ -182,12 +184,14 @@ def IconD2EPStoNetCDF(ST, datafolder, longitude, latitude, nearestpoints, output
     # looping over forecast cycle starting times
     for x in ST:
         # read Icon ensemble files
-        icond2eps.read_file(x, datafolder)
+        icond2eps.read_file(x, datafolder, short='int16', scale_factor=0.01, fill_value=-1)
         # gridding the data
         icond2eps.regrid(lon_target=longitude, lat_target=latitude, file_nearest=nearestpoints)
         # exporting to netcdf if no file exists i.e. first forecast cycle
         if x == ST[0]:
-            icond2eps.export_netcdf(filename=outputfile, data_kwargs={'compression': 'zlib', 'complevel': 4})
+            icond2eps.export_netcdf(filename=outputfile,  data_kwargs={'compression': 'zlib', 'complevel': 4},
+                                    data_format='i2', scale_factor_nc=0.01, scale_undo=True
+)
         else:
             icond2eps.export_netcdf_append(filename=outputfile)
 
@@ -227,14 +231,17 @@ def radolantoNetCDF(radolan_times, datafolder, idx_lon, idx_lat, outputfile):
     for x in radolan_times:
 
         # read Icon ensemble files
-        rad.read_file(start_datetime=x, directory=datafolder)
+        rad.read_file(start_datetime=x, directory=datafolder
+                        , short='int16', scale_factor=0.01
+        , fill_value=-1)
         # gridding the data
         rad.crop(idx_west=idx_lon[0], idx_east=idx_lon[1] - 1,
                  idx_south=idx_lat[1] - 1, idx_north=idx_lat[0])
         # rad.regrid(lon_target=lon, lat_target=lat,file_nearest=nearestpoints,neighbors=1)
         # exporting to netcdf if no file exists i.e. first forecast cycle
         if x == radolan_times[0]:
-            rad.export_netcdf(filename=outputfile)
+            rad.export_netcdf(filename=outputfile,  data_kwargs={'compression': 'zlib', 'complevel': 4},
+                                    data_format='i2', scale_factor_nc=0.01, scale_undo=True)
         else:
             rad.export_netcdf_append(filename=outputfile)
 
@@ -257,7 +264,7 @@ if __name__ == '__main__':
 
     fortime = timeframe((2022,9,9,0), (2022,9,10,0), "forecast")
 
-    radtime = timeframe((2022,9,5,0), (2022,9,10,0), "radar")
+    radtime = timeframe((2021,7,25,0), (2021,7,26,0), "radar")
 
 
     # radolantoNetCDF(radtime, datafolder="//vs-grp08.zih.tu-dresden.de/hwstore/RadolanRW/202209",
