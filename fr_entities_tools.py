@@ -23,6 +23,7 @@ class Rainfall(object):
     def __init__(self, array):
 
         self.arr = array
+        self.average = 0
 
     def rtrn_arr(self):
         """
@@ -80,10 +81,23 @@ class Rainfall(object):
         vals = []
         times = []
         
-        for i in range(0,len(newself.arr.time),resolution):
+        if type(self) == Ensemble_run:
+            variable = newself.arr
+            
+        if type(self) == Deterministic_run:
+            
+            if 'average' in dir(self):
+                if isinstance(self.average,int) == False:
+                    variable = newself.average
+                else:
+                    variable = newself.arr
+        else:
+            variable = newself.arr
+        
+        for i in range(0,len(variable.time),resolution):
             try:
-                times.append(newself.arr.isel(time=i+resolution-1).time.values)
-                vals.append(newself.arr.isel(time=slice(i, i+resolution)).sum(dim='time'))
+                times.append(variable.isel(time=i+resolution-1).time.values)
+                vals.append(variable.isel(time=slice(i, i+resolution)).sum(dim='time'))
             except:
                break
         
@@ -190,22 +204,36 @@ class Rainfall(object):
             rectangular grid bounded by the polygon given in the shapefile.
 
         """
-
         
+         
 
         newself = copy.deepcopy(self)
-        if 'gen_observation_field' in dir(self):
-            rf = newself.gen_observation_field()
-        elif 'gen_deterministic_field' in dir(self):
-            rf = newself.gen_deterministic_field()
-        else:
-            rf = newself
+        
+        if isinstance(newself,Observation):
+            if 'arr' not in dir(newself):
+                rf = newself.gen_observation_field().arr
+            else:
+                rf = newself.arr
+        
+        if isinstance(newself,Deterministic_run):
+            if 'arr' not in dir(newself):
+                rf = newself.gen_deterministic_field().arr
+            else:
+                rf = newself.arr
+            
+            
+        # if 'gen_observation_field' in dir(self):
+        #     rf = newself.gen_observation_field().arr
+        # elif 'gen_deterministic_field' in dir(self) and 'latitude' in dir(self.fr):
+        #     rf = newself.gen_deterministic_field().fr
+        # else:
+        #     rf = newself.original
 
         # reading the shapefile
-        da = rf.arr.rio.write_crs("EPSG:4326")
+        da = rf.rio.write_crs("EPSG:4326")
         da = da.rename({"lat": 'y', 'lon': 'x'})
 
-        shp = gp.read_file(shapefile+'.shp')
+        shp = gp.read_file(shapefile)
 
         clipped = da.rio.clip(shp.geometry.apply(mapping), shp.crs)
         clipped = clipped.rename({"y": "lat", "x": "lon"})
@@ -511,7 +539,7 @@ class Forecast(Rainfall):
         self.cyc = forecast_cycle
         self.wnd = horizon
         self.dssid = 0
-        self.average = 0
+        
         self.original = self.gen_dataset()
         
     def gen_dataset(self):
@@ -656,10 +684,11 @@ class Deterministic_run(Forecast):
         """
         
 
-        if self.dssid == 0:
-            ds = self.gen_dataset()
-        else:
-            ds = self.fr
+        # if self.dssid == 0:
+        #     ds = self.gen_dataset()
+        # else:
+        #     ds = self.fr
+        ds = self.fr
         # extracting the variable name
         name = list(ds.data_vars.keys())[0]
         # extracting the value variable to a dataXarray and renaming it       
@@ -714,7 +743,8 @@ class Ensemble_run(Forecast):
         
         newself = copy.deepcopy(self)
         
-        if self.average !=0:
+        if isinstance(self.average,int) == False:
+        # if self.average !=0:
             ds = self.average
         else:
             ds = copy.deepcopy(self.original)
@@ -840,7 +870,7 @@ class Ensemble_run(Forecast):
         da = da.rename({"lat": 'y', 'lon': 'x'})
 
         # reading the shapefile
-        shp = gp.read_file(shapefile+'.shp')
+        shp = gp.read_file(shapefile)
 
         clipped = da.rio.clip(shp.geometry.apply(mapping), shp.crs)
         clipped = clipped.rename({"y": "lat", "x": "lon"})
@@ -1059,8 +1089,13 @@ if __name__ == '__main__':
 
     # test_EPS()
     
-eps = Ensemble_run("C:/Project/icond2eps_3_juli21.nc", 1)    
-eps = eps.eps_extract_by_shp("C:/Project/shp/WeiseElster/OelsnitzTEZG_DHDN")
-avg = eps.avg_areal_prec()   
-qs = avg.gen_quantiles(95)
-qs.get_ens_quantiles().plot()
+    # eps = Ensemble_run("C:/Project/icond2eps_3_juli21.nc", 1)    
+    # eps = eps.eps_extract_by_shp("C:/Project/shp/WeiseElster/OelsnitzTEZG_DHDN")
+    # avg = eps.avg_areal_prec()   
+    # qs = avg.gen_quantiles(95)
+    # qs.get_ens_quantiles().plot()
+    
+    fr = Ensemble_run("C:/Project/icond2eps_3_juli21.nc", 1).eps_extract_by_shp(
+        "C:/Project/shp/WeiseElster/OelsnitzTEZG_DHDN.shp").avg_areal_prec().gen_quantiles(95).aggr_temporal(3)
+    # 
+    
