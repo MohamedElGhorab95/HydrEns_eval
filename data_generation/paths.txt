@@ -1,0 +1,9 @@
+# paths to catchment shapefiles
+# mandau 
+shp/Mandau/egp6741491_Zittau_5_TEZG_neu
+# mugliz
+shp/Mugliz/mugliz_cats
+# weiße  
+shp/WeiseElster/OelsnitzTEZG_DHDN
+
+
