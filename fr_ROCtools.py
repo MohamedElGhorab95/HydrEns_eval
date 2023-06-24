@@ -60,7 +60,7 @@ class ROC(object):
         # get the upper and lower bounds of the rainfall fields
         upper = max(self.forecast_array.max(skipna=True),self.observation_array.max(skipna=True)).values
         lower = min(self.forecast_array.min(skipna=True),self.observation_array.min(skipna=True)).values
-        bins = 29
+        bins = 79
         bin_width = (upper-lower)/bins
         
         category_edges = np.arange(lower, upper + bin_width, bin_width)
@@ -91,7 +91,8 @@ class ROC(object):
         
         fig, ax = plt.subplots()
         
-        ax.plot(self.pofd,self.pod,color='r')
+        # ax.plot(self.pofd,self.pod,color='r')
+        ax.scatter(self.pofd,self.pod,color='r', marker='*')
         
         # Add a 45-degree line
         ax.plot([0, 1], [0, 1], transform=ax.transAxes, ls='--', color='k')

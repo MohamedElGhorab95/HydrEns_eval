@@ -269,7 +269,7 @@ if __name__ == '__main__':
 
         # # some evaluation metrics
 
-        # cont.sr()
+        cont.sr()
         # cont.far()
         # cont.pod()
         # cont.pofd()

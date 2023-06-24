@@ -91,7 +91,7 @@ def timeframe(start_datetime, end_datetime, product):
         radolan_times = [start_datetime]
         hour = dt.timedelta(hours=1)
         ct = 0
-        while radolan_times[-1] < end_datetime + hour*23:
+        while radolan_times[-1] < end_datetime + hour*47:
             ct += 1
             radolan_times.append(start_datetime + ct * hour)
 
@@ -135,8 +135,10 @@ def IconD2toNetCDF(ST, datafolder, longitude, latitude, nearestpoints, outputfil
     icond2 = IconD2()
     # looping over forecast cycle starting times
     for x in ST:
+        f_date = x.strftime("%Y%m")
         # read Icon
-        icond2.read_file(x, datafolder, short='int16', scale_factor=0.01, fill_value=-1)
+        icond2.read_file(x, datafolder+f_date
+                         , short='int16', scale_factor=0.01, fill_value=-1)
         # gridding the data
         icond2.regrid(lon_target=longitude, lat_target=latitude, file_nearest=nearestpoints)
         # exporting to netcdf if no file exists i.e. first forecast cycle
@@ -183,8 +185,9 @@ def IconD2EPStoNetCDF(ST, datafolder, longitude, latitude, nearestpoints, output
     icond2eps = IconD2EPS()
     # looping over forecast cycle starting times
     for x in ST:
+        f_date = x.strftime("%Y%m")
         # read Icon ensemble files
-        icond2eps.read_file(x, datafolder, short='int16', scale_factor=0.01, fill_value=-1)
+        icond2eps.read_file(x, datafolder+f_date, short='int16', scale_factor=0.01, fill_value=-1)
         # gridding the data
         icond2eps.regrid(lon_target=longitude, lat_target=latitude, file_nearest=nearestpoints)
         # exporting to netcdf if no file exists i.e. first forecast cycle
@@ -229,9 +232,9 @@ def radolantoNetCDF(radolan_times, datafolder, idx_lon, idx_lat, outputfile):
     rad = RadolanRW()
     # looping over forecast cycle starting times
     for x in radolan_times:
-
+        f_date = x.strftime("%Y%m")
         # read Icon ensemble files
-        rad.read_file(start_datetime=x, directory=datafolder
+        rad.read_file(start_datetime=x, directory=datafolder+f_date
                         , short='int16', scale_factor=0.01
         , fill_value=-1)
         # gridding the data
