@@ -16,7 +16,7 @@ import datetime as dt
 import matplotlib.pyplot as plt
 from shapely.geometry import mapping
 import rasterio
-
+from dask.distributed import Client
 
 class Rainfall(object):
 
@@ -130,7 +130,7 @@ class Rainfall(object):
 
         elif 'arr' in dir(self):
 
-            newself.arr = newself.arr.mean(('lon', 'lat'))
+            newself.average = newself.arr.mean(('lon', 'lat'))
 
         return newself
 
@@ -216,9 +216,9 @@ class Rainfall(object):
                 rf = newself.arr
         
         if isinstance(newself,Deterministic_run):
-            if 'arr' not in dir(newself):
-                rf = newself.gen_deterministic_field().arr
-            else:
+            # if 'arr' not in dir(newself):
+            #     rf = newself.gen_deterministic_field().arr
+            # else:
                 rf = newself.arr
             
             
@@ -408,7 +408,7 @@ class Observation(Rainfall):
 
         """
         
-        self.obs = xr.open_dataset(self.file)
+        self.obs = xr.open_dataset(self.file, chunks='auto')
         
         
         # self.obs = self.obs.reindex(lat=self.obs['lat'][::-1])
@@ -435,6 +435,8 @@ class Observation(Rainfall):
         if self.wnd != None:        
             # limiting the observations to the chosen horizon
             self.arr = self.arr.isel(time=slice(0, self.wnd))
+            
+        self.arr = self.arr.load()
             
       
 
@@ -532,7 +534,7 @@ class Observation(Rainfall):
 
 class Forecast(Rainfall):
 
-    def __init__(self, forecast_file, forecast_cycle, horizon=48):
+    def __init__(self, forecast_file, forecast_cycle=None, horizon=None):
 
         
         self.fr = xr.open_dataset(forecast_file)
@@ -554,36 +556,58 @@ class Forecast(Rainfall):
         """
 
         
-        # adding the actual cooridnates to the xarray
-        # creating a new list with the actual coordinates
-        l_lat = np.linspace(self.fr.latitude.max(), self.fr.latitude.min(), len(self.fr['lat'])).tolist()
-        l_lon = np.linspace(self.fr.longitude.min(), self.fr.longitude.max(), len(self.fr['lon'])).tolist()
-        # assigning the actual coordinates
-        self.fr = self.fr.assign_coords(lat=l_lat, lon=l_lon)
-        # drop unnecessary variables
-        self.fr = self.fr.drop_vars(["longitude", "latitude"])
-        # extracting the forecast cycle data
-        self.fr = self.fr.isel(time=self.cyc - 1)
-
-        # limiting the forecast to the chosen horizon
-        self.fr = self.fr.isel(
-            forecast_time=slice(0, self.wnd * 4))  # multiply by 4 because for each hour 4 available timesteps
-        # skipping the first zero value
-        self.fr = self.fr.isel(forecast_time=slice(1, len(self.fr.forecast_time)))
-        # temporal aggregation from 15 minutes to one hour for the icond2 values
-        self.fr = self.fr.resample(forecast_time="1H").sum()  # mm/15min -> mm/hr
-        # correcting dimension name
-        self.fr = self.fr.rename({"time": "start_time", "forecast_time": "time"})
-
-        # create a list of  date time objects  ending with the forecast time
-        time = [dt.timedelta(hours=i) for i in np.arange(1, len(self.fr.time) + 1).tolist()]
-        # assigning new times to solve the 1:15, 2:15,.... time problem
-        self.fr = self.fr.assign_coords({'time': time})
-        # referencing the time coordinate based on the forecast release time as its starting point
-        self.fr = self.fr.assign_coords({'time': self.fr.time + self.fr.start_time})
+        # # adding the actual cooridnates to the xarray
+        # # creating a new list with the actual coordinates
+        # l_lat = np.linspace(self.fr.latitude.max(), self.fr.latitude.min(), len(self.fr['lat'])).tolist()
+        # l_lon = np.linspace(self.fr.longitude.min(), self.fr.longitude.max(), len(self.fr['lon'])).tolist()
+        # # assigning the actual coordinates
+        # self.fr = self.fr.assign_coords(lat=l_lat, lon=l_lon)
+        # # drop unnecessary variables
+        # self.fr = self.fr.drop_vars(["longitude", "latitude"])
+        
+        if 'start_time' in self.fr.dims: # should always give false, except for the case of leadtime netcdfs which are already preset
+            # extracting the forecast cycle data
+            # adding the actual cooridnates to the xarray
+            # creating a new list with the actual coordinates
+            l_lat = np.linspace(self.fr.latitude.max(), self.fr.latitude.min(), len(self.fr['lat'])).tolist()
+            l_lon = np.linspace(self.fr.longitude.min(), self.fr.longitude.max(), len(self.fr['lon'])).tolist()
+            # assigning the actual coordinates
+            self.fr = self.fr.assign_coords(lat=l_lat, lon=l_lon)
+            # drop unnecessary variables
+            self.fr = self.fr.drop_vars(["longitude", "latitude"])
+            
+            self.fr = self.fr.isel(time=self.cyc - 1)
+            # limiting the forecast to the chosen horizon
+            self.fr = self.fr.isel(
+                forecast_time=slice(0, self.wnd * 4))  # multiply by 4 because for each hour 4 available timesteps
+            # skipping the first zero value
+            self.fr = self.fr.isel(forecast_time=slice(1, len(self.fr.forecast_time)))
+            # temporal aggregation from 15 minutes to one hour for the icond2 values
+            self.fr = self.fr.resample(forecast_time="1H").sum()  # mm/15min -> mm/hr
+            # correcting dimension name
+            self.fr = self.fr.rename({"time": "start_time", "forecast_time": "time"})
+    
+            # create a list of  date time objects  ending with the forecast time
+            time = [dt.timedelta(hours=i) for i in np.arange(1, len(self.fr.time) + 1).tolist()]
+            # assigning new times to solve the 1:15, 2:15,.... time problem
+            self.fr = self.fr.assign_coords({'time': time})
+            # referencing the time coordinate based on the forecast release time as its starting point
+            self.fr = self.fr.assign_coords({'time': self.fr.time + self.fr.start_time})
+        # else:
+        #     l_lat = np.linspace(51.921707, 49.991165, 212).tolist()
+        #     l_lon = np.linspace(11.634748, 15.226268, 253).tolist()
+        #     # assigning the actual coordinates
+        #     self.fr = self.fr.assign_coords(lat=l_lat, lon=l_lon)
+        #     # drop unnecessary variables
+        #     self.fr = self.fr.drop_vars(["longitude", "latitude"])
 
         
-        return self.fr
+        return self.fr.load()
+
+    def gen_leadtime(lt, events):
+        pass
+
+
 
     def preplot(self, avgd):
 
@@ -673,8 +697,8 @@ class Forecast(Rainfall):
 
 class Deterministic_run(Forecast):
 
-    def __init__(self, forecast_file, forecast_cycle, horizon=48):
-        Forecast.__init__(self, forecast_file, forecast_cycle, horizon=48)
+    def __init__(self, forecast_file, forecast_cycle=None, horizon=48):
+        Forecast.__init__(self, forecast_file, forecast_cycle=None, horizon=48)
 
     def gen_deterministic_field(self):
         """
@@ -706,8 +730,8 @@ class Deterministic_run(Forecast):
 
 class Ensemble_run(Forecast):
 
-    def __init__(self, forecast_file, forecast_cycle, horizon=48):
-        Forecast.__init__(self, forecast_file, forecast_cycle, horizon=48)
+    def __init__(self, forecast_file, forecast_cycle=None, horizon=48):
+        Forecast.__init__(self, forecast_file, forecast_cycle=None, horizon=48)
         self.dssid = 2
 
     
@@ -741,7 +765,62 @@ class Ensemble_run(Forecast):
         # else:
         #     ds = self.fr
         
+                
+        # newself = copy.deepcopy(self)
+        
+        # if self.average ==0:
+        #     ds = copy.deepcopy(self.original)
+        # else:
+        #     ds = self.average
+            
+        # # parallelizing the computation for acceleration
+        
+
+        # # # Set up a Dask distributed client
+        # # client = Client()
+            
+        # # Enable Dask and chunk the dataset along desired dimensions
+        # ds = ds.chunk({'time': -1})  # Chunking along the 'time' and 'new' dimensions
+        
+        
+        # # if isinstance(self.average,int) == False:
+        # # # if self.average !=0:
+        # #     ds = self.average
+        # # else:
+        # #     ds = copy.deepcopy(self.original)
+        
+        
+        
+        # if averaging == 'mean':
+        #     # calculate ensemble mean
+        #     mean = ds.to_array(dim='new').mean(dim='new', skipna=True).compute()
+        #     # add the mean to the dataset
+        #     ds = ds.assign(ensemble_val=mean)
+        #     # extracting the mean variable to a dataXarray and structuring the array | forecast
+        #     newself.arr = ds.ensemble_val.rename("EPS rainfall forecast | mean")
+        # elif averaging == 'median':
+        #     # calculate ensemble median
+        #     median = ds.to_array(dim='new').median(dim='new', skipna=True).compute()
+        #     # add the median to the dataset
+        #     ds = ds.assign(ensemble_val=median)
+        #     # extracting the median variable to a dataXarray and structuring the array | forecast
+        #     newself.arr = ds.ensemble_val.rename("EPS rainfall forecast | median")
+        # else:
+        #     # calculate ensemble percentile
+        #     per = ds.to_array(dim='new')  # extract the ensembles to a new dimension and put it a new array
+        #     # calculate the percentile over this dimension
+        #     per = per.quantile(q=averaging / 100, dim='new', skipna=True).compute()
+
+        #     # assing the ensemble variable in the original data set to the created array
+        #     ds = ds.assign(ensemble_val=per)
+        #     # extracting the mean variable to a dataXarray and renaming it
+        #     newself.arr = ds.ensemble_val.rename("EPS rainfall forecast | {}th percentile".format(averaging))
+        
+        
+        
         newself = copy.deepcopy(self)
+        
+               
         
         if isinstance(self.average,int) == False:
         # if self.average !=0:
@@ -749,33 +828,33 @@ class Ensemble_run(Forecast):
         else:
             ds = copy.deepcopy(self.original)
         
-        
+        # Enable Dask and chunk the dataset along desired dimensions
+        ds = ds.chunk({'time': -1})  # Chunking along the 'time' and 'new' dimensions
         
         if averaging == 'mean':
             # calculate ensemble mean
-            mean = ds.to_array(dim='new').mean(dim='new', skipna=True)
+            mean = ds.to_array(dim='new').chunk({'new': -1}).mean(dim='new', skipna=True).compute()
             # add the mean to the dataset
             ds = ds.assign(ensemble_val=mean)
             # extracting the mean variable to a dataXarray and structuring the array | forecast
-            newself.arr = ds.ensemble_val.rename("EPS rainfall forecast | mean")
+            newself.arr = ds.ensemble_val.rename("EPS rainfall forecast | mean").load()
         elif averaging == 'median':
             # calculate ensemble median
-            median = ds.to_array(dim='new').median(dim='new', skipna=True)
+            median = ds.to_array(dim='new').chunk({'new': -1}).median(dim='new', skipna=True).compute()
             # add the median to the dataset
             ds = ds.assign(ensemble_val=median)
             # extracting the median variable to a dataXarray and structuring the array | forecast
-            newself.arr = ds.ensemble_val.rename("EPS rainfall forecast | median")
+            newself.arr = ds.ensemble_val.rename("EPS rainfall forecast | median").load()
         else:
             # calculate ensemble percentile
-            per = ds.to_array(dim='new')  # extract the ensembles to a new dimension and put it a new array
+            per = ds.to_array(dim='new').chunk({'new': -1})  # extract the ensembles to a new dimension and put it a new array
             # calculate the percentile over this dimension
-            per = per.quantile(q=averaging / 100, dim='new', skipna=True)
+            per = per.quantile(q=averaging / 100, dim='new', skipna=True).compute()
 
             # assing the ensemble variable in the original data set to the created array
             ds = ds.assign(ensemble_val=per)
             # extracting the mean variable to a dataXarray and renaming it
-            newself.arr = ds.ensemble_val.rename("EPS rainfall forecast | {}th percentile".format(averaging))
-
+            newself.arr = ds.ensemble_val.rename("EPS rainfall forecast | {}th percentile".format(averaging)).load()
         
         
         return newself
@@ -882,6 +961,21 @@ class Ensemble_run(Forecast):
 
         return newself
 
+# =================================================================================================================        
+# =================================================================================================================
+# =================================================================================================================
+
+
+class leadtime(object):
+    def __init__(self, forecast_file, forecast_type ,leadtime, events):
+        
+        self.lt = leadtime
+        self.events = events
+        self.typ = forecast_type
+    
+    def gen(self):
+        if self.typ == "deterministic":
+            pass
 
 # =================================================================================================================        
 # =================================================================================================================
@@ -1095,7 +1189,17 @@ if __name__ == '__main__':
     # qs = avg.gen_quantiles(95)
     # qs.get_ens_quantiles().plot()
     
-    fr = Ensemble_run("C:/Project/icond2eps_3_juli21.nc", 1).eps_extract_by_shp(
-        "C:/Project/shp/WeiseElster/OelsnitzTEZG_DHDN.shp").avg_areal_prec().gen_quantiles(95).aggr_temporal(3)
-    # 
+     
+    rad = Observation("//vs-grp07.zih.tu-dresden.de/howa/work/students/Mohamed_Elghorab/netCDFs/fertig/radRW_ICO.nc").gen_observation_field()
     
+    
+    rad = rad.extract_by_shp("shp/Mugliz/mugliz_cats.shp").avg_areal_prec()
+    
+    type(rad.average)
+    
+    # icond2 = Deterministic_run("C:/netCDFs/3/3hour_icond2.nc").gen_deterministic_field()
+    
+    # a = icond2.extract_by_shp("shp/Mugliz/mugliz_cats.shp")
+    
+    # a.avg_areal_prec().average.plot()
+   

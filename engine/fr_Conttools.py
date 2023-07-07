@@ -1,12 +1,13 @@
 import numpy as np
 import xarray as xr
 import xskillscore as xs
-
+from sklearn.metrics import f1_score
+from sklearn.metrics import fbeta_score
 
 
 class CONT(object):
 
-    def __init__(self, forecast_object, observation_object, forecast_threshold, observation_threshold=None):
+    def __init__(self,  observation_object, forecast_object, forecast_threshold, observation_threshold=None):
         '''
         Parameters
         ----------
@@ -36,12 +37,22 @@ class CONT(object):
 
         # checking if the inputs are objects with fields or not i.e. checking if they already have an array(field) attribure
 
-            if 'arr' in dir(forecast_object):
+            # if 'arr' in dir(forecast_object):
+            if forecast_object.dssid ==2: # deterministic run   
                 self.forecast_array = forecast_object.rtrn_arr()
     
             if 'gen_deterministic_field' in dir(forecast_object):
                 if forecast_object.dssid == 0:
                     self.forecast_array = forecast_object.gen_deterministic_field().rtrn_arr()
+            
+                if not isinstance(forecast_object.average, int):
+                    self.forecast_array = forecast_object.average
+        
+
+
+
+
+
 
         if isinstance(observation_object,xr.DataArray):
              self.observation_array = observation_object
@@ -50,16 +61,32 @@ class CONT(object):
                 self.observation_array = observation_object.rtrn_arr()
             else:
                 self.observation_array = observation_object.gen_observation_field().rtrn_arr()
-
+        
+        if not isinstance(observation_object.average,int):
+            self.observation_array = observation_object.average
+        
+        
         self.observation_threshold = observation_threshold
         self.forecast_threshold = forecast_threshold
 
         # selecting the same time window
-        start = max(self.observation_array.time[0], self.forecast_array.time[0])
-        end = min(self.observation_array.time[-1], self.forecast_array.time[-1])
-        # slicing both arrays to the same time frame
-        self.observation_array = self.observation_array.sel(time=slice(start, end))
-        self.forecast_array = self.forecast_array.sel(time=slice(start, end))
+        # selecting the same time window
+        missing_times = set(self.observation_array.time.values) - set(self.forecast_array.time.values)
+        
+        obs_df = self.observation_array.to_dataframe()
+        obs_df = obs_df[~obs_df.index.isin(missing_times)]
+
+        # Convert DataFrame back to DataArray
+        self.observation_array = obs_df.to_xarray()['rainfall radar observation | Radolan-RW']
+        
+        
+        # self.forecast_array = self.forecast_array.combine_first(xr.DataArray(0, dims=('time',), coords={'time': list(missing_times)}))
+ 
+        # start = max(self.observation_array.time[0], self.forecast_array.time[0])
+        # end = min(self.observation_array.time[-1], self.forecast_array.time[-1])
+        # # slicing both arrays to the same time frame
+        # self.observation_array = self.observation_array.sel(time=slice(start, end))
+        # self.forecast_array = self.forecast_array.sel(time=slice(start, end))
 
         # define the warning threshold
         # optional in case two different thresholds exist for forecast and observation
@@ -68,8 +95,8 @@ class CONT(object):
 
         # create the first dichotomous (2-category booleean array)
         # as type changes from true/false to 1/0
-        bol_fr = (self.forecast_array >= self.forecast_threshold).astype(np.uint8)
-        bol_obs = (self.observation_array >= self.observation_threshold).astype(np.uint8)
+        self.bol_fr = (self.forecast_array >= self.forecast_threshold).astype(np.uint8)
+        self.bol_obs = (self.observation_array >= self.observation_threshold).astype(np.uint8)
 
         # create the contingfency table
 
@@ -79,10 +106,10 @@ class CONT(object):
         # checking whether the data is one or two dimensional before creating the table
 
         if len(self.observation_array.coords) > 1 and "lat" in self.observation_array.coords:  # 2Dimensional data
-            self.tab = xs.Contingency( bol_obs,bol_fr, cat_eds, cat_eds, dim=['lat', 'lon', 'time'])
+            self.tab = xs.Contingency( self.bol_obs,self.bol_fr, cat_eds, cat_eds, dim=['lat', 'lon', 'time'])
 
         else:
-            self.tab = xs.Contingency( bol_obs,bol_fr, cat_eds, cat_eds, dim=['time'])
+            self.tab = xs.Contingency( self.bol_obs,self.bol_fr, cat_eds, cat_eds, dim=['time'])
 
     # =============================================================================================================================
 
@@ -199,7 +226,7 @@ class CONT(object):
         The critical success index explicitly indicates to what degree the forecast product can capture flooding events.
 
         '''
-        return float(self.hits() / (self.hits() + self.correct_negatives() + self.false_alarms() + self.misses()))
+        return float(self.hits() / (self.hits() + self.false_alarms() + self.misses()))
 
     def pss(self):
         '''
@@ -214,7 +241,50 @@ class CONT(object):
         '''
 
         return float(self.tab.peirce_score())
+    
+    def f1(self):
+        '''
+        .. math:: F1 = 2*\\frac{Precision*POD}{Precision+POD} 
 
+        Returns
+        -------
+        float
+            F1 SKILL SCORE OF THE FORECAST
+        The F1 score is a measure of a model's accuracy in binary classification tasks, combining both precision and recall into a single metric. It is the harmonic mean of precision and recall, providing a balanced evaluation of a model's performance
+        where
+            .. math:: Precision = SR = \\frac{hits}{hits+false~alarms}
+        '''
+        # # Convert the DataArrays to numpy arrays
+        predicted_np = self.bol_fr.values
+        actual_np = self.bol_obs.values
+        
+        # Calculate the F1 score
+        f1 = f1_score(actual_np, predicted_np)
+        
+            
+        return float(f1)
+    
+    def f2(self):
+        '''
+        .. math:: F2 = 5*\\frac{Precision*POD}{4*Precision+POD} 
+
+        Returns
+        -------
+        float
+            F2 SKILL SCORE OF THE FORECAST
+         F2 score emphasizes the importance of correctly identifying positive instances, which is particularly useful in scenarios where false negatives are more critical than false positives.
+        where
+            .. math:: Precision = SR = \\frac{hits}{hits+false~alarms}
+        '''
+        # Convert the DataArrays to numpy arrays
+        predicted_np = self.bol_fr.values
+        actual_np = self.bol_obs.values
+        
+        # Calculate the F1 score
+        f2 = fbeta_score(actual_np, predicted_np, beta=2)
+       
+            
+        return float(f2)
 
 # ========================================================================================================================================================
 
@@ -225,7 +295,7 @@ class CONT(object):
 
 
 if __name__ == '__main__':
-    from fr_entities_tools import *
+    from engine.fr_entities_tools import *
 
 
     def test_CONT():
@@ -394,10 +464,29 @@ if __name__ == '__main__':
         # cont.pofd()
         # cont.fbias()
         # cont.csi()
-        # cont.pss()
+        cont.pss()
 
         # return cont.print_cont_tab(), conteps.print_cont_tab()
         return cont.print_cont_tab(), conteps.print_cont_tab(), contav.print_cont_tab(), contepsav.print_cont_tab()
 
 
-    test_CONT_cat()
+    # test_CONT_cat()
+    
+    
+    
+    
+    
+    
+    rad = Observation("C:/netCDFs/fertig/radRW_ICO.nc").gen_observation_field().extract_by_shp("shp/Mugliz/mugliz_cats.shp").aggr_temporal(3).avg_areal_prec()
+    # icond2 = Deterministic_run("C:/netCDFs/3/3hour_icond2.nc").gen_deterministic_field().extract_by_shp("shp/Mugliz/mugliz_cats.shp").avg_areal_prec()
+    icond2eps = Ensemble_run("C:/netCDFs/21/21hour_icond2eps.nc").eps_extract_by_shp("shp/Mugliz/mugliz_merged.shp").avg_areal_prec()
+    # .gen_quantiles(90)
+    
+    
+   
+    # a.f1()
+    # # print(a.f1())
+    # print(a.f2())
+        
+    
+   

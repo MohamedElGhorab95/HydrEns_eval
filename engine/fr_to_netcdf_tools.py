@@ -6,9 +6,10 @@ Created on Mon Apr 10 14:44:46 2023
 """
 import os
 
-os.chdir('weatherdataharmonizer_main')
+
 
 def target(lat1, lat2, lon1, lon2, product, version):
+    os.chdir('weatherdataharmonizer_main')
     """
     # defining target extents and resolution based on the Radolan-RW raster
 
@@ -41,7 +42,7 @@ def target(lat1, lat2, lon1, lon2, product, version):
     idx_lat = np.any(idx, axis=1).nonzero()[0]
     # modifying the matrices based on the index of TRUE values created before
     lon_target.data = lon_target.data[idx_lat[0]:idx_lat[-1], idx_lon[0]:idx_lon[-1]]
-    lat_target.data = lat_target.data[idx_lat[0]:idx_lat[-1], idx_lon[0]:idx_lon[-1]]
+    lat_target.data = lat_target.data[idx_lat[0]:idx_lat[-1], idx_lon[0]:idx_lon[-1]]    
     os.chdir('..')
     return lon_target, lat_target, (np.min(idx_lon), np.max(idx_lon)), (np.min(idx_lat), np.max(idx_lat))
 
@@ -50,6 +51,7 @@ def target(lat1, lat2, lon1, lon2, product, version):
 
 
 def timeframe(start_datetime, end_datetime, product):
+    os.chdir('weatherdataharmonizer_main')
     """
     this function creates a list of the time steps of the files (forecast / radar) to be read
 
@@ -104,7 +106,113 @@ def timeframe(start_datetime, end_datetime, product):
 
 
 # =========================================================================================================================
+def CosmoD2toNetCDF(ST, datafolder, longitude, latitude, nearestpoints, outputfile):
+    os.chdir('weatherdataharmonizer_main')
+    """
+    this function creates a netCDF file from CosmoD2 forecast files
+
+    Parameters
+    ----------
+    ST : python dictionary.
+        a dictionary containing forecast cycle starting times 
+        with the following format {Year:YYYY,Month:M,Day:DD}
+    datafolder : string
+        Data folder location and name.
+    forecast_issue: int or a python list
+        [0,3,6,9,12,15,18]
+    nearestpoints : string 
+        file nearest .npz location and name.
+    outputfile : string
+        output file location and name .nc.
+    longitude : container object
+          target longitude object.
+    latitude : container object
+          target latitude object.
+
+    Returns
+    -------
+    None.
+
+    """
+
+    from met_entities.CosmoD2 import CosmoD2 
+
+    # creating an instance of Icon object
+    cosmod2 = CosmoD2()
+    # looping over forecast cycle starting times
+    for x in ST:
+        y_date = x.strftime("%Y") 
+        m_date = x.strftime("%m") 
+        d_date = x.strftime("%d")
+        # read Icon
+        cosmod2.read_file(x, datafolder+y_date+'/'+ y_date+m_date+d_date,forecast_hours=24
+                          , short='int16', scale_factor=0.01, fill_value=-1)
+        # gridding the data
+        cosmod2.regrid(lon_target=longitude, lat_target=latitude, file_nearest=nearestpoints)
+        # exporting to netcdf if no file exists i.e. first forecast cycle
+        if x == ST[0]:
+            cosmod2.export_netcdf(filename=outputfile
+            , data_kwargs={'compression': 'zlib', 'complevel': 4},
+                                  data_format='i2', scale_factor_nc=0.01, scale_undo=True)
+        # appending to the netcdf file
+        else:
+            cosmod2.export_netcdf_append(filename=outputfile)
+    
+    os.chdir('..')
+# =========================================================================================================================
+def CosmoD2EPStoNetCDF(ST, datafolder, longitude, latitude, nearestpoints, outputfile):
+    os.chdir('weatherdataharmonizer_main')
+    """
+    this function creates a netCDF file from IconD2EPS forecast files
+
+    Parameters
+    ----------
+   ST : python dictionary.
+       a dictionary containing forecast cycle starting times 
+       with the following format {Year:YYYY,Month:M,Day:DD}
+    datafolder : string
+        Data folder location and name.
+
+    nearestpoints : string 
+        file nearest .npz location and name.
+    outputfile : string
+        output file location and name .nc.
+    longitude : container object
+          target longitude object.
+    latitude : container object
+          target latitude object.
+
+    Returns
+    -------
+    None.
+
+    """
+    from met_entities.CosmoD2EPS import CosmoD2EPS
+
+    # creating an instance of IconEPS object
+    cosmod2eps = CosmoD2EPS()
+    # looping over forecast cycle starting times
+    for x in ST:
+        y_date = x.strftime("%Y") 
+        m_date = x.strftime("%m") 
+        d_date = x.strftime("%d")
+        # read Icon ensemble files
+        cosmod2eps.read_file(x, datafolder+y_date+'/'+ y_date+m_date+d_date, forecast_hours=24
+                             , short='int16', scale_factor=0.01, fill_value=-1)
+        # gridding the data
+        cosmod2eps.regrid(lon_target=longitude, lat_target=latitude, file_nearest=nearestpoints)
+        # exporting to netcdf if no file exists i.e. first forecast cycle
+        if x == ST[0]:
+            cosmod2eps.export_netcdf(filename=outputfile,  data_kwargs={'compression': 'zlib', 'complevel': 4},
+                                    data_format='i2', scale_factor_nc=0.01, scale_undo=True
+)
+        else:
+            cosmod2eps.export_netcdf_append(filename=outputfile)
+
+    os.chdir('..')    
+# =========================================================================================================================
 def IconD2toNetCDF(ST, datafolder, longitude, latitude, nearestpoints, outputfile):
+    os.chdir('weatherdataharmonizer_main')
     """
     this function creates a netCDF file from IconD2 forecast files
 
@@ -152,11 +260,12 @@ def IconD2toNetCDF(ST, datafolder, longitude, latitude, nearestpoints, outputfil
         # appending to the netcdf file
         else:
             icond2.export_netcdf_append(filename=outputfile)
+    
     os.chdir('..')
-
 # ====================================================================================================================================
 
 def IconD2EPStoNetCDF(ST, datafolder, longitude, latitude, nearestpoints, outputfile):
+    os.chdir('weatherdataharmonizer_main')
     """
     this function creates a netCDF file from IconD2EPS forecast files
 
@@ -201,10 +310,11 @@ def IconD2EPStoNetCDF(ST, datafolder, longitude, latitude, nearestpoints, output
         else:
             icond2eps.export_netcdf_append(filename=outputfile)
 
-    os.chdir('..')
+    os.chdir('..')    
 # =================================================================================================================
 
 def radolantoNetCDF(radolan_times, datafolder, idx_lon, idx_lat, outputfile):
+    os.chdir('weatherdataharmonizer_main')
     """
     this function creates a netCDF file from Radolan observation files
 
@@ -268,9 +378,20 @@ if __name__ == '__main__':
 # Sachsen after WGS84 > lat 50.1 - 51.8 | long 11.7 - 15.2 <
     lon, lat, id_lon, id_lat = target(50.1,51.8,11.7,15.2,"radolanrx",version=4)
 
-    # fortime = timeframe((2022,9,9,0), (2022,9,10,0), "forecast")
+    # fortime = timeframe((2020,6,27,0), (2020,6,28,0), "forecast")
 
-    # radtime = timeframe((2021,7,25,0), (2021,7,26,0), "radar")
+    radtime = timeframe((2022,9,16,0), (2022,9,20,0), "radar")
+
+
+
+    # CosmoD2toNetCDF(ST=fortime,datafolder="//vs-grp08.zih.tu-dresden.de/hwstore/CosmoD2/",
+    #             longitude=lon,
+    #             latitude=lat,
+    #             nearestpoints="Sachsen_nearestpoints_cosmo.npz",
+    #             outputfile="D:/Erasmus_FRM/05.Masterarbeit/03.Bearbeitung/cosmod2.nc")
+
+
+
 
 
     # radolantoNetCDF(radtime, datafolder="//vs-grp08.zih.tu-dresden.de/hwstore/RadolanRW/202209",

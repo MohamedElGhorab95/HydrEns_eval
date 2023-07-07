@@ -146,9 +146,9 @@ class CosmoD2EPS(MetEntities):
             gr_data.lon = copy.copy(clon)  # copy with another storage address hex(id(gr_data.lon)) != hex(id(clon))
             gr_data.lat = copy.copy(clat)
             if self.short == 'int16':
-                gr_data.data = np.empty((cosmo_data_flattened[0].data.size, len(cosmo_data_flattened)), dtype=np.short)
+                gr_data.data = np.empty((cosmo_data_flattened[0].data.shape + (len(cosmo_data_flattened),)), dtype=np.short)
             elif self.short == 'int32':
-                gr_data.data = np.empty((cosmo_data_flattened[0].data.size, len(cosmo_data_flattened)), dtype=np.int32)
+                gr_data.data = np.empty((cosmo_data_flattened[0].data.shape + (len(cosmo_data_flattened),)), dtype=np.int32)
             else:
                 gr_data.data = np.empty((cosmo_data_flattened[0].data.shape + (len(cosmo_data_flattened),)))
             for i in range(len(cosmo_data_flattened)):
@@ -497,8 +497,16 @@ class CosmoD2EPS(MetEntities):
 
         if ncfile[self.nc_desc.var_lon].shape != gr_data_first.lon.data.shape:
             raise Exception(f'the data shape in {filename} differs from object shape')
-        if ncfile[self.nc_desc.var_forecast].size != self.forecast_value.data.size:
-            raise Exception(f'the forecast shape in {filename} differs from object shape')
+        num_forecast_nc = ncfile[self.nc_desc.var_forecast].size
+        num_forecast_self = self.forecast_value.data.size
+        num_forecast_fill = num_forecast_nc
+        if num_forecast_nc < num_forecast_self:
+            print(f'the forecast shape in {filename} is smaller than from object - the timeseries will be shortened')
+            num_forecast_fill = num_forecast_nc
+        if num_forecast_nc > num_forecast_self:
+            print(f'the forecast shape in {filename} is larger than from object - the timeseries will be extended with missing values')
+            num_forecast_fill = num_forecast_self
+            # raise Exception(f'the forecast shape in {filename} differs from object shape')
 
         # check scale_factor and fill_value
         scale_undo = False
@@ -551,24 +559,26 @@ class CosmoD2EPS(MetEntities):
         if separation:
             if isinstance(self.gr_data, GeoReferencedData):
                 # if only one eps member is available
-                ncfile[variable_names[0]][num_time_nc, :, :, :] = \
+                ncfile[variable_names[0]][num_time_nc, :, :, :num_forecast_fill] = \
                     st.gr_data_scaling(self.gr_data, scale_undo, self.gr_data.data_description.scale_factor,
-                                       scale_factor_nc)
+                                       scale_factor_nc)[:, :, :num_forecast_fill]
             else:
                 for realis in range(num_eps):
-                    ncfile[variable_names[realis]][num_time_nc, :, :, :] = \
+                    ncfile[variable_names[realis]][num_time_nc, :, :, :num_forecast_fill] = \
                         st.gr_data_scaling(self.gr_data[realis], scale_undo,
-                                           self.gr_data[realis].data_description.scale_factor, scale_factor_nc)
+                                           self.gr_data[realis].data_description.scale_factor,
+                                           scale_factor_nc)[:, :, :num_forecast_fill]
         else:
             if isinstance(self.gr_data, GeoReferencedData):
                 # if only one eps member is available
-                ncfile[self.nc_desc.var_data][num_time_nc, :, :, :] = \
+                ncfile[self.nc_desc.var_data][num_time_nc, :, :, :num_forecast_fill] = \
                     st.gr_data_scaling(self.gr_data, scale_undo, self.gr_data.data_description.scale_factor,
-                                       scale_factor_nc)
+                                       scale_factor_nc)[:, :, :num_forecast_fill]
             else:
                 for realis in range(num_eps):
-                    ncfile[self.nc_desc.var_data][num_time_nc, :, :, :, realis] = \
+                    ncfile[self.nc_desc.var_data][num_time_nc, :, :, :num_forecast_fill, realis] = \
                         st.gr_data_scaling(self.gr_data[realis], scale_undo,
-                                           self.gr_data[realis].data_description.scale_factor, scale_factor_nc)
+                                           self.gr_data[realis].data_description.scale_factor,
+                                           scale_factor_nc)[:, :, :num_forecast_fill]
 
         ncfile.close()
