@@ -3,7 +3,7 @@ import xarray as xr
 import xskillscore as xs
 from sklearn.metrics import f1_score
 from sklearn.metrics import fbeta_score
-
+import inspect
 
 class CONT(object):
 
@@ -31,22 +31,28 @@ class CONT(object):
 
          # checking whether the data is xarray type
          
+        # if isinstance(forecast_object,xr.DataArray):
+        #      self.forecast_array = forecast_object
+        # else:
+
+        # # checking if the inputs are objects with fields or not i.e. checking if they already have an array(field) attribure
+
+        #     # if 'arr' in dir(forecast_object):
+        #     if forecast_object.dssid ==2: # deterministic run   
+        #         self.forecast_array = forecast_object.rtrn_arr()
+    
+        #     if 'gen_deterministic_field' in dir(forecast_object):
+        #         if forecast_object.dssid == 0:
+        #             self.forecast_array = forecast_object.gen_deterministic_field().rtrn_arr()
+            
+        #         if not isinstance(forecast_object.average, int):
+        #             self.forecast_array = forecast_object.average
+        
         if isinstance(forecast_object,xr.DataArray):
              self.forecast_array = forecast_object
         else:
-
-        # checking if the inputs are objects with fields or not i.e. checking if they already have an array(field) attribure
-
-            # if 'arr' in dir(forecast_object):
-            if forecast_object.dssid ==2: # deterministic run   
-                self.forecast_array = forecast_object.rtrn_arr()
-    
-            if 'gen_deterministic_field' in dir(forecast_object):
-                if forecast_object.dssid == 0:
-                    self.forecast_array = forecast_object.gen_deterministic_field().rtrn_arr()
             
-                if not isinstance(forecast_object.average, int):
-                    self.forecast_array = forecast_object.average
+            self.forecast_array = forecast_object.average
         
 
 
@@ -54,16 +60,24 @@ class CONT(object):
 
 
 
+        # if isinstance(observation_object,xr.DataArray):
+        #      self.observation_array = observation_object
+        # else:
+        #     if 'arr' in dir(observation_object):
+        #         self.observation_array = observation_object.rtrn_arr()
+        #     else:
+        #         self.observation_array = observation_object.gen_observation_field().rtrn_arr()
+        
+        # if not isinstance(observation_object.average,int):
+        #     self.observation_array = observation_object.average
+        
         if isinstance(observation_object,xr.DataArray):
              self.observation_array = observation_object
         else:
-            if 'arr' in dir(observation_object):
-                self.observation_array = observation_object.rtrn_arr()
+            if not isinstance(observation_object.average,int):
+                self.observation_array = observation_object.average
             else:
-                self.observation_array = observation_object.gen_observation_field().rtrn_arr()
-        
-        if not isinstance(observation_object.average,int):
-            self.observation_array = observation_object.average
+                self.observation_array = observation_object.rtrn_arr()
         
         
         self.observation_threshold = observation_threshold
@@ -108,6 +122,9 @@ class CONT(object):
         if len(self.observation_array.coords) > 1 and "lat" in self.observation_array.coords:  # 2Dimensional data
             self.tab = xs.Contingency( self.bol_obs,self.bol_fr, cat_eds, cat_eds, dim=['lat', 'lon', 'time'])
 
+        elif isinstance(self.forecast_array, xr.Dataset):
+            pass
+            
         else:
             self.tab = xs.Contingency( self.bol_obs,self.bol_fr, cat_eds, cat_eds, dim=['time'])
 
@@ -128,28 +145,110 @@ class CONT(object):
                                                                                               int(self.tab.false_alarms()),
                                                                                               int(self.tab.misses()),
                                                                                               int(self.tab.correct_negatives())))
+    
+    
+    def quant(self, quantile):
+        members = list(self.forecast_array.variables)[3:]
+    
+        metric = []
+        calling_function = inspect.currentframe().f_back.f_code.co_name
+        
+        for mem in members:
+            r = CONT(self.observation_array, self.forecast_array[mem], self.forecast_threshold)
+            
+            if calling_function == 'hits':
+                metric.append(r.hits())
+            elif calling_function == 'misses':
+                metric.append(r.misses())
+            elif calling_function == 'false_alarms':
+                metric.append(r.false_alarms())
+            elif calling_function == 'correct_negatives':
+                metric.append(r.correct_negatives())
+            elif calling_function == 'sr':
+                metric.append(r.sr())
+            elif calling_function == 'far':
+                metric.append(r.far())
+            elif calling_function == 'pod':
+                metric.append(r.pod())
+            elif calling_function == 'pofd':
+                metric.append(r.pofd())
+            elif calling_function == 'fbias':
+                metric.append(r.fbias())
+            elif calling_function == 'csi':
+                metric.append(r.csi())
+            elif calling_function == 'pss':
+                metric.append(r.pss())
+            elif calling_function == 'f1':
+                metric.append(r.f1())
+            elif calling_function == 'f2':
+                metric.append(r.f2())
+            elif calling_function == 'acc':
+                metric.append(r.acc())
+            # Add more conditions for other calling functions if needed
+            
+        if quantile == "mean":
+            metric = np.mean(metric)
+        else:
+            metric = np.quantile(metric, (quantile/100))
+        
+        return metric
+        
+   
+   
 
     # =============================================================================================================================
 
     # basic contingency table metrics getters
 
-    def hits(self):
-        return self.tab.hits()
+    # def hits(self):
+    #     return self.tab.hits()
+    def hits(self,q=None):
+        if isinstance(self.observation_array, xr.DataArray) and isinstance(self.forecast_array, xr.DataArray):
+            return self.tab.hits()
+        else:
+            return int(self.quant(q))
+        
+    def misses(self,q=None):
+        if isinstance(self.observation_array, xr.DataArray) and isinstance(self.forecast_array, xr.DataArray):
+            return self.tab.misses()
+        else:
+            return int(self.quant(q))
 
-    def misses(self):
-        return self.tab.misses()
+    def false_alarms(self,q=None):
+        if isinstance(self.observation_array, xr.DataArray) and isinstance(self.forecast_array, xr.DataArray):
+            return self.tab.false_alarms()
+        else:
+            return int(self.quant(q))
 
-    def false_alarms(self):
-        return self.tab.false_alarms()
-
-    def correct_negatives(self):
-        return self.tab.correct_negatives()
+    def correct_negatives(self,q=None):
+        if isinstance(self.observation_array, xr.DataArray) and isinstance(self.forecast_array, xr.DataArray):
+            return self.tab.correct_negatives()
+        else:
+            return int(self.quant(q))
 
     # =============================================================================================================================
 
     # contingency table performance metrics
 
-    def sr(self):
+    def acc(self,q=None):
+        '''
+        .. math:: Accuracy = \\frac{hits+correct negatives}{total number of instances}
+
+        Returns
+        -------
+        float
+            SUCCESS RATIO OF THE FORECAST
+        The success ratio shows the fraction of the correctly identified “Yes” instances over the total number of forecasted “Yes” instances.
+
+        '''
+        if isinstance(self.observation_array, xr.DataArray) and isinstance(self.forecast_array, xr.DataArray):
+            return float((self.hits() + self.correct_negatives()) / (self.hits() + self.misses() + self.false_alarms() + self.correct_negatives()))
+        else:
+            return self.quant(q)
+
+
+    
+    def sr(self,q=None):
         '''
         .. math:: SR = \\frac{hits}{hits+false~alarms}
 
@@ -160,10 +259,12 @@ class CONT(object):
         The success ratio shows the fraction of the correctly identified “Yes” instances over the total number of forecasted “Yes” instances.
 
         '''
+        if isinstance(self.observation_array, xr.DataArray) and isinstance(self.forecast_array, xr.DataArray):
+            return float(self.tab.success_ratio())
+        else:
+            return self.quant(q)
 
-        return float(self.tab.success_ratio())
-
-    def far(self):
+    def far(self,q=None):
         '''
         .. math:: FAR = \\frac{false~alarms}{hits+false~alarms}
 
@@ -174,9 +275,12 @@ class CONT(object):
         The false alarm ratio indicates the ratio of the false alarms to the total number of forecasted events.
 
         '''
-        return float(self.tab.false_alarm_ratio())
+        if isinstance(self.observation_array, xr.DataArray) and isinstance(self.forecast_array, xr.DataArray):
+            return float(self.tab.false_alarm_ratio())
+        else:
+            return self.quant(q)
 
-    def pod(self):
+    def pod(self,q=None):
         '''
         .. math:: POD = \\frac{hits}{hits+misses}
 
@@ -187,9 +291,12 @@ class CONT(object):
         The probability of detection indicates the ratio of the correctly forecasted hits to total number of observed events.
 
         '''
-        return float(self.hits() / (self.hits() + self.misses()))
+        if isinstance(self.observation_array, xr.DataArray) and isinstance(self.forecast_array, xr.DataArray):
+            return float(self.hits() / (self.hits() + self.misses()))
+        else:
+            return self.quant(q)
 
-    def pofd(self):
+    def pofd(self,q=None):
         '''
         .. math:: POFD = \\frac{false~alarms}{false~alarms+correct~negatives}
 
@@ -200,9 +307,12 @@ class CONT(object):
         The probability of false detection indicates the ratio of the false alarms to the total number of observed non-event instances.
 
         '''
-        return float(self.false_alarms() / (self.false_alarms() + self.correct_negatives()))
-
-    def fbias(self):
+        if isinstance(self.observation_array, xr.DataArray) and isinstance(self.forecast_array, xr.DataArray):
+            return float(self.false_alarms() / (self.false_alarms() + self.correct_negatives()))
+        else:
+            return self.quant(q)
+            
+    def fbias(self,q=None):
         '''
         .. math:: FBIAS = \\frac{hits+false~alarms}{hits+misses}
 
@@ -213,9 +323,12 @@ class CONT(object):
         The frequency bias compares the number of forecasted events to the number of observed events. It indicated whether the forecast has a trend of over or under forecasting.
 
         '''
-        return float((self.hits() + self.false_alarms()) / (self.hits() + self.misses()))
-
-    def csi(self):
+        if isinstance(self.observation_array, xr.DataArray) and isinstance(self.forecast_array, xr.DataArray):
+            return float((self.hits() + self.false_alarms()) / (self.hits() + self.misses()))
+        else:
+            return self.quant(q)
+    
+    def csi(self,q=None):
         '''
         .. math:: CSI = \\frac{hits}{Total~sum~of~instances}
 
@@ -226,9 +339,12 @@ class CONT(object):
         The critical success index explicitly indicates to what degree the forecast product can capture flooding events.
 
         '''
-        return float(self.hits() / (self.hits() + self.false_alarms() + self.misses()))
-
-    def pss(self):
+        if isinstance(self.observation_array, xr.DataArray) and isinstance(self.forecast_array, xr.DataArray):
+            return float(self.hits() / (self.hits() + self.false_alarms() + self.misses()))
+        else:
+            return self.quant(q)
+        
+    def pss(self, q=None):
         '''
         .. math:: PSS = \\frac{hits}{hits+misses} - \\frac{false~alarms}{false~alarms+correct~negatives}
 
@@ -239,10 +355,12 @@ class CONT(object):
         Peirce's skill score shows how well the forecast discriminates between the positive and the negative event instances
 
         '''
-
-        return float(self.tab.peirce_score())
+        if isinstance(self.observation_array, xr.DataArray) and isinstance(self.forecast_array, xr.DataArray):
+            return float(self.tab.peirce_score())
+        else:
+            return self.quant(q)
     
-    def f1(self):
+    def f1(self, q=None):
         '''
         .. math:: F1 = 2*\\frac{Precision*POD}{Precision+POD} 
 
@@ -254,17 +372,20 @@ class CONT(object):
         where
             .. math:: Precision = SR = \\frac{hits}{hits+false~alarms}
         '''
-        # # Convert the DataArrays to numpy arrays
-        predicted_np = self.bol_fr.values
-        actual_np = self.bol_obs.values
-        
-        # Calculate the F1 score
-        f1 = f1_score(actual_np, predicted_np)
-        
+        if isinstance(self.observation_array, xr.DataArray) and isinstance(self.forecast_array, xr.DataArray):
+            # # Convert the DataArrays to numpy arrays
+            predicted_np = self.bol_fr.values
+            actual_np = self.bol_obs.values
             
-        return float(f1)
+            # Calculate the F1 score
+            f1 = f1_score(actual_np, predicted_np)
+            
+                
+            return float(f1)
+        else:
+            return self.quant(q)
     
-    def f2(self):
+    def f2(self,q=None):
         '''
         .. math:: F2 = 5*\\frac{Precision*POD}{4*Precision+POD} 
 
@@ -276,15 +397,18 @@ class CONT(object):
         where
             .. math:: Precision = SR = \\frac{hits}{hits+false~alarms}
         '''
-        # Convert the DataArrays to numpy arrays
-        predicted_np = self.bol_fr.values
-        actual_np = self.bol_obs.values
-        
-        # Calculate the F1 score
-        f2 = fbeta_score(actual_np, predicted_np, beta=2)
-       
+        if isinstance(self.observation_array, xr.DataArray) and isinstance(self.forecast_array, xr.DataArray):
+            # Convert the DataArrays to numpy arrays
+            predicted_np = self.bol_fr.values
+            actual_np = self.bol_obs.values
             
-        return float(f2)
+            # Calculate the F1 score
+            f2 = fbeta_score(actual_np, predicted_np, beta=2)
+           
+                
+            return float(f2)
+        else:
+            return self.quant(q)
 
 # ========================================================================================================================================================
 
@@ -479,14 +603,26 @@ if __name__ == '__main__':
     
     rad = Observation("C:/netCDFs/fertig/radRW_ICO.nc").gen_observation_field().extract_by_shp("shp/Mugliz/mugliz_cats.shp").aggr_temporal(3).avg_areal_prec()
     # icond2 = Deterministic_run("C:/netCDFs/3/3hour_icond2.nc").gen_deterministic_field().extract_by_shp("shp/Mugliz/mugliz_cats.shp").avg_areal_prec()
-    icond2eps = Ensemble_run("C:/netCDFs/21/21hour_icond2eps.nc").eps_extract_by_shp("shp/Mugliz/mugliz_merged.shp").avg_areal_prec()
+    icond2eps = Ensemble_run("C:/netCDFs/3/3hour_icond2eps.nc").eps_extract_by_shp("shp/Mugliz/mugliz_merged.shp").avg_areal_prec()
     # .gen_quantiles(90)
     
-    
-   
+    x = CONT(rad, icond2eps, 3)
+    # x.hits(q=70)
+    # x.csi(95)
+    # x.f1(95)
+    x.fbias('mean')
+    x.pss(25)
+    # x.sr()
     # a.f1()
     # # print(a.f1())
     # print(a.f2())
-        
+    x.acc(50)    
+    x.pod()
+    x.pofd()
     
-   
+    
+    variable_names = list(icond2eps.average.data_vars)
+    member_arrays = [icond2eps.average[var_name] for var_name in variable_names]
+    forecast_dataarray = xr.concat(member_arrays, dim='member')
+    
+    crps = xs.crps_ensemble(rad.average, forecast_dataarray, dim='time')

@@ -5,41 +5,16 @@ Created on Sun Jul  2 10:09:02 2023
 @author: M Elghorab
 """
 
-import numpy as np
 import time
 import matplotlib.pyplot as plt
 import seaborn as sns
-# leads = np.arange(3, 19, 3)
-
-# areas = {"Weiße Elster":327.61,  'Niederoderwitz':29.08,
-#           'Mügliz':242.38, 'Mandau':279.29,'Lauenstein':75.5,
-#           'Bad Elster':47.7,'Adorf':170.36 }
-
-
-# area = [327.61,29.08,242.38,279.29,75.5,47.7,170.36]
-# area.sort()
-
-
-
-# valzo = dict(zip(area, [[random.random()*50 for i in range(6)] for x in range(8)]))
-
-# df = pd.DataFrame.from_dict(valzo, orient='index')
-
-# df.columns = leads
-
-
-
-
-################################################################################
-################################################################################
-################################################################################
-
-
 from HydrEns_eval.engine.fr_entities_tools import *
 from HydrEns_eval.engine.fr_Conttools import *
 from HydrEns_eval.engine.fr_ROCtools import *
 
-
+################################################################################
+################################################################################
+################################################################################
 
 
 
@@ -84,6 +59,10 @@ def load_catchment(name):
             return lines[14].strip()
         if name == 'Seifhennersdorf':
             return lines[16].strip()
+        if name == 'Geising':
+            return lines[18].strip()
+        if name == 'Grossschönau':
+            return lines[20].strip()
 
 
 
@@ -117,35 +96,31 @@ def gen_for_catchment(catchment, locations):
     rad_c = rad_c.avg_areal_prec()
   
     fore_c = fore_c.avg_areal_prec()
- 
-   
-    
-    
-    # generating quantiles
-    print('generating quantiles',flush= True)
-    fore_c = fore_c.gen_quantiles(50)
-    
+     
     
     return rad_c, fore_c
 
 
 
-def calc_metric(observation, forecast):
-    print("calculating ROC..........",flush= True)
+def calc_metric(observation, forecast , metric):
+    print("calculating performance metric..........",flush= True)
     
     
- 
-    return (float(ROC(observation, forecast).roc_auc()))
-        # a = ROC(observation[0], observation[idx])
-        # a.roc_auc()
-        # a.plot_roc()
-    
+    if metric == 'Frequency bias':
+        return CONT(observation, forecast, 3).fbias(50)
+    elif metric == 'Critical success index':
+        return CONT(observation, forecast, 3).csi(50)
+    elif metric == "Pierce's skill score":
+        return CONT(observation, forecast, 3).pss(50)
+    elif metric == 'Area under ROC curve':
+        return (float(ROC(observation, forecast).roc_auc(quantile=50)))
+        
 
 
 
 
 
-def evaluate_for_catchment(cats):
+def evaluate_for_catchment(cats, met):
 
    
     # TODO change
@@ -162,45 +137,45 @@ def evaluate_for_catchment(cats):
         rad, fore = gen_for_catchment(cats,files)
         
         # TODO calculate metrics | change the metric if required
-        results.append(calc_metric(rad, fore)) 
+        results.append(calc_metric(rad, fore, met)) 
        
     return results
 
 
-def create_for_regions():
+def create_for_regions(metric):
     
     region1 = {"Weiße Elster":328, 'Bad Elster':48 ,'Adorf':170 }
     
-    region2 = {'Mügliz':242, 'Lauenstein':76 }
+    region2 = {'Mügliz':200, 'Lauenstein':76, 'Geising':26 }
     
-    region3 = {'Niederoderwitz':29, 'Mandau':279, 'Seifhennersdorf':75}
+    region3 = {'Niederoderwitz':29, 'Mandau':279, 'Seifhennersdorf':75 , 'Grossschönau': 162}
     
     
     data1   = {key: [None,region1[key]]  for key in region1.keys()}
     for a in data1.keys():
-            data1[a][0]=evaluate_for_catchment(a)   
+            data1[a][0]=evaluate_for_catchment(a, metric)   
     data1 = {data1[key][1]: data1[key][0] for key in data1.keys()}
     
     data2   = {key: [None,region2[key]]  for key in region2.keys()}
     for a in data2.keys():
-            data2[a][0]=evaluate_for_catchment(a)
+            data2[a][0]=evaluate_for_catchment(a, metric)
     data2 = {data2[key][1]: data2[key][0] for key in data2.keys()}
     
     data3   = {key: [None,region3[key]]  for key in region3.keys()}
     for a in data3.keys():
-            data3[a][0]=evaluate_for_catchment(a)
+            data3[a][0]=evaluate_for_catchment(a, metric)
     data3 = {data3[key][1]: data3[key][0] for key in data3.keys()}
     
     return [data1, data2, data3]
     
         
-def plot_spatial(list_of_dics):
+def plot_spatial(list_of_dics, metric):
     
     max_lead = 24
     leads = list(range(3,max_lead+1,3))
     
     region = 0
-    regions = ['Western Saxony', 'Central Saxony', 'Eastern Saxony']
+    regions = ['Vogtland', 'Eastern Ore Mountains', 'Eastern Saxony']
     for l in list_of_dics:
         sns.set_theme(style="whitegrid")
         fig, ax = plt.subplots(dpi=750)
@@ -212,21 +187,27 @@ def plot_spatial(list_of_dics):
            
             
             plt.plot(leads, l[u],label='{}km\u00b2'.format(u) )
-            
+        
+        # TODO change metric name in y axis and folder    
         ax.legend()
         plt.xticks(leads)
         ax.set_title("Skill score of ICOND2EPS forecast performance\n{}".format(regions[region]))
         ax.set_xlabel('Leadtime (hrs)')
-        ax.set_ylabel('Area under ROC curve\nEnsemble median')
+        ax.set_ylabel('{}\nEnsemble median'.format(metric))
         plt.xlim(3, max_lead)
+        plt.savefig("//vs-grp07.zih.tu-dresden.de/howa/work/students/Mohamed_Elghorab/results/spatial extent analysis/{}/{}".format(metric, regions[region]))        
         region +=1
+        
+
     return plt.show()
 
 
 
+mets = ['Frequency bias' , 'Critical success index', "Pierce's skill score", 'Area under ROC curve'  ]
 
+for m in mets:
 
-tic = time.time()
-df = create_for_regions()
-print("Operation time : {} hours".format((time.time()-tic)/3600), flush=True)   
-plot_spatial(df)
+    tic = time.time()
+    df = create_for_regions(m)
+    print("Operation time : {} hours".format((time.time()-tic)/3600), flush=True)   
+    plot_spatial(df,m)

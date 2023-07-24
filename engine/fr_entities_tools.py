@@ -609,18 +609,19 @@ class Forecast(Rainfall):
 
 
 
-    def preplot(self, avgd):
+    def preplot(self, member):
 
+        # if isinstance(self, Ensemble_run):
         if 'gen_quantiles' in dir(self):
 
-            array = self.gen_quantiles(avgd).rtrn_arr()
+            array = xr.DataArray(self.fr.variables['icond2eps_{}'.format(member-1)], coords=self.fr.coords)
         else:
 
             array = self.gen_deterministic_field().rtrn_arr()
 
         return array
 
-    def plot(self, date_time, averaging_method=None):
+    def plot(self, date_time, Ens_mem=None):
         """
         This method plots the rainfall field for the extents of the data array 
         at the defined timestep
@@ -652,22 +653,24 @@ class Forecast(Rainfall):
         try:
             array = self.arr
         except:
-            array = self.preplot(averaging_method)
+            array = self.preplot(Ens_mem)
 
         # capture = data_array.sel(time = dt.timedelta(hours=plot_date.hour))  
         capture = array.sel(time=window)
         # extract forecast release time
-        release = array.start_time.values
-        formatted_releasedate = np.datetime_as_string(release, unit='s').replace('T', ' ').replace('-', '/')
+        if Ens_mem == None:
+            release = array.start_time.values
+            formatted_releasedate = np.datetime_as_string(release, unit='s').replace('T', ' ').replace('-', '/')
 
         # ==========================================================================    
         # Creating the plot
 
         plt.figure()  # to avoid plotting figures on top of each other
         capture.plot(vmin=0, vmax=14.5)
-
-        plt.title('Date/ Time: {}  \n Forecast released: {}'.format(window, formatted_releasedate))
-
+        if Ens_mem == None:
+            plt.title('Date/ Time: {}  \n Forecast released: {}'.format(window, formatted_releasedate))
+        else:
+            plt.title('Date/ Time: {} \nEnsemble member: {}  '.format(window, Ens_mem))
         return
     
     
@@ -1190,15 +1193,21 @@ if __name__ == '__main__':
     # qs.get_ens_quantiles().plot()
     
      
-    rad = Observation("//vs-grp07.zih.tu-dresden.de/howa/work/students/Mohamed_Elghorab/netCDFs/fertig/radRW_ICO.nc").gen_observation_field()
+    # rad = Observation("//vs-grp07.zih.tu-dresden.de/howa/work/students/Mohamed_Elghorab/netCDFs/fertig/radRW_ICO.nc").gen_observation_field()
     
     
-    rad = rad.extract_by_shp("shp/Mugliz/mugliz_cats.shp").avg_areal_prec()
+    # rad = rad.extract_by_shp("shp/Mugliz/mugliz_cats.shp").avg_areal_prec()
     
-    type(rad.average)
+    # type(rad.average)
     
     # icond2 = Deterministic_run("C:/netCDFs/3/3hour_icond2.nc").gen_deterministic_field()
     
+    cosmod2 = Deterministic_run("C:/netCDFs/3/3hour_cosmod2.nc").gen_deterministic_field()
+    
+    
+    cosmod2eps = Ensemble_run("C:/netCDFs/3/3hour_cosmod2eps.nc").eps_extract_by_shp("shp/Mugliz/mugliz_cats.shp").avg_areal_prec()
+    
+    rad = Observation('C:/netCDFs/fertig/radRW_cosmod2eps.nc').gen_observation_field().aggr_temporal(3).extract_by_shp("shp/Mugliz/mugliz_cats.shp").avg_areal_prec()
     # a = icond2.extract_by_shp("shp/Mugliz/mugliz_cats.shp")
     
     # a.avg_areal_prec().average.plot()

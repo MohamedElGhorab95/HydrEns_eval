@@ -117,29 +117,22 @@ def gen_for_catchment(catchment, locations):
     rad_c = rad_c.avg_areal_prec()
   
     fore_c = fore_c.avg_areal_prec()
- 
-   
-    
-    
-    # generating quantiles
-    print('generating quantiles',flush= True)
-    fore_c = fore_c.gen_quantiles(50)
-    
+     
     
     return rad_c, fore_c
 
 
 
 def calc_metric(observation, forecast):
-    print("calculating ROC..........",flush= True)
+    print("calculating performance metric..........",flush= True)
     
     
- 
-    return (float(ROC(observation, forecast).roc_auc()))
-        # a = ROC(observation[0], observation[idx])
-        # a.roc_auc()
-        # a.plot_roc()
     
+    # return CONT(observation, forecast, 3).fbias(50)
+    # return CONT(observation, forecast, 3).csi(50)
+    # return CONT(observation, forecast, 3).pss(50)
+    return (float(ROC(observation, forecast).roc_auc(quantile=50)))
+        
 
 
 
@@ -171,9 +164,9 @@ def create_for_regions():
     
     region1 = {"Weiße Elster":328, 'Bad Elster':48 ,'Adorf':170 }
     
-    region2 = {'Mügliz':242, 'Lauenstein':76 }
+    region2 = {'Mügliz':200, 'Lauenstein':76, 'Geising':26 }
     
-    region3 = {'Niederoderwitz':29, 'Mandau':279, 'Seifhennersdorf':75}
+    region3 = {'Niederoderwitz':29, 'Mandau':279, 'Seifhennersdorf':75 , 'Grossschönau': 162}
     
     
     data1   = {key: [None,region1[key]]  for key in region1.keys()}
@@ -200,7 +193,7 @@ def plot_spatial(list_of_dics):
     leads = list(range(3,max_lead+1,3))
     
     region = 0
-    regions = ['Western Saxony', 'Central Saxony', 'Eastern Saxony']
+    regions = ['Vogtland', 'Eastern Ore Mountains', 'Eastern Saxony']
     for l in list_of_dics:
         sns.set_theme(style="whitegrid")
         fig, ax = plt.subplots(dpi=750)
@@ -212,7 +205,8 @@ def plot_spatial(list_of_dics):
            
             
             plt.plot(leads, l[u],label='{}km\u00b2'.format(u) )
-            
+        
+        # TODO change metric name in y axis and folder    
         ax.legend()
         plt.xticks(leads)
         ax.set_title("Skill score of ICOND2EPS forecast performance\n{}".format(regions[region]))
@@ -220,6 +214,8 @@ def plot_spatial(list_of_dics):
         ax.set_ylabel('Area under ROC curve\nEnsemble median')
         plt.xlim(3, max_lead)
         region +=1
+        plt.savefig("//vs-grp07.zih.tu-dresden.de/howa/work/students/Mohamed_Elghorab/results/ROC/{}".format(regions[region]))        
+
     return plt.show()
 
 

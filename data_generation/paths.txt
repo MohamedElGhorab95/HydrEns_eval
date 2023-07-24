@@ -15,3 +15,7 @@ shp/Lauenstein4/Lauenstein4.shp
 shp/Niederoderwitz/Niederoderwitz.shp
 # Seifhennersdorf
 shp/Seifennersdorf/Seifennersdorf.shp
+# Geising
+shp/Geising/Geising.shp
+# Grossschönau
+shp/Grossschoenau/Grossschoenau.shp

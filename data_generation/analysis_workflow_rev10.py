@@ -63,7 +63,7 @@ def gen_leadtime_netcdf(events, netcdf_file, run_name):
     
     
     
-    leadt= np.arange(3,25,3)
+    leadt= np.arange(9,25,3)
     
     temp_res = 3
     

@@ -73,7 +73,7 @@ def create_radar(file):
     fr_to_netcdf_tools.radolantoNetCDF(t, datafolder="//vs-grp08.zih.tu-dresden.de/hwstore/RadolanRW/",
                     idx_lon=id_lon, idx_lat=id_lat, 
                     # outputfile="//vs-grp07.zih.tu-dresden.de/howa/work/students/Mohamed_Elghorab/netCDFs/radRW_ICO.nc")
-                    outputfile="D:/Erasmus_FRM/05.Masterarbeit/03.Bearbeitung/01.Code/radRW_cosmod2.nc")
+                    outputfile="D:/Erasmus_FRM/05.Masterarbeit/03.Bearbeitung/01.Code/radRW_cosmod2eps.nc")
         
        
     return t, lib
@@ -148,9 +148,9 @@ lon, lat, id_lon, id_lat = fr_to_netcdf_tools.target(50.1,51.8,11.7,15.2,"radola
 
 ################################################################################################
 
-# tic = time.time()
-# create_radar('data_generation/cosmo_events_drad.txt')
-# print((time.time()-tic)/3600) # operation time in hours
+tic = time.time()
+create_radar('data_generation/cosmo_events_erad.txt')
+print((time.time()-tic)/3600) # operation time in hours
 
 
 # tic = time.time()
@@ -163,14 +163,14 @@ lon, lat, id_lon, id_lat = fr_to_netcdf_tools.target(50.1,51.8,11.7,15.2,"radola
 # print((time.time()-tic)/3600) # operation time in hours
 
 
-tic = time.time()
-create_Cosmo('data_generation/cosmo_events_d.txt',"D")
-print((time.time()-tic)/3600) # operation time in hours
+# tic = time.time()
+# create_Cosmo('data_generation/cosmo_events_d.txt',"D")
+# print((time.time()-tic)/3600) # operation time in hours
 
 
-tic = time.time()
-create_Cosmo('data_generation/cosmo_events_e.txt',"eps")
-print((time.time()-tic)/3600) # operation time in hours
+# tic = time.time()
+# create_Cosmo('data_generation/cosmo_events_e.txt',"eps")
+# print((time.time()-tic)/3600) # operation time in hours
 
 
 
