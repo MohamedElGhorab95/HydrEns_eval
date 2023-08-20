@@ -4,6 +4,7 @@ import xskillscore as xs
 from sklearn.metrics import f1_score
 from sklearn.metrics import fbeta_score
 import inspect
+from engine.fr_entities_tools import *
 
 class CONT(object):
 
@@ -48,12 +49,21 @@ class CONT(object):
         #         if not isinstance(forecast_object.average, int):
         #             self.forecast_array = forecast_object.average
         
-        if isinstance(forecast_object,xr.DataArray):
-             self.forecast_array = forecast_object
+        if isinstance(forecast_object, R_Forecast) == False:    
+            if isinstance(forecast_object,xr.DataArray):
+                 self.forecast_array = forecast_object
+            else:
+                # try:
+                #     self.forecast_array = forecast_object.arr
+                # except:
+                #     self.forecast_array = forecast_object.average
+                if isinstance(forecast_object, Deterministic_run):
+                    self.forecast_array = forecast_object.average
+                else:
+                    self.forecast_array = forecast_object.arr
+                    
         else:
-            
-            self.forecast_array = forecast_object.average
-        
+            self.forecast_array = forecast_object.fr
 
 
 
@@ -70,15 +80,17 @@ class CONT(object):
         
         # if not isinstance(observation_object.average,int):
         #     self.observation_array = observation_object.average
-        
-        if isinstance(observation_object,xr.DataArray):
-             self.observation_array = observation_object
-        else:
-            if not isinstance(observation_object.average,int):
-                self.observation_array = observation_object.average
+        if isinstance(observation_object, R_Observation) == False: 
+            if isinstance(observation_object,xr.DataArray):
+                 self.observation_array = observation_object
             else:
-                self.observation_array = observation_object.rtrn_arr()
-        
+                if not isinstance(observation_object.average,int):
+                    self.observation_array = observation_object.average
+                else:
+                    self.observation_array = observation_object.rtrn_arr()
+                    
+        else: 
+            self.observation_array = observation_object.fr
         
         self.observation_threshold = observation_threshold
         self.forecast_threshold = forecast_threshold
@@ -91,7 +103,11 @@ class CONT(object):
         obs_df = obs_df[~obs_df.index.isin(missing_times)]
 
         # Convert DataFrame back to DataArray
-        self.observation_array = obs_df.to_xarray()['rainfall radar observation | Radolan-RW']
+        
+        try:
+            self.observation_array = obs_df.to_xarray()['rainfall radar observation | Radolan-RW']
+        except:
+            self.observation_array = obs_df.to_xarray()['runoff_discharge']
         
         
         # self.forecast_array = self.forecast_array.combine_first(xr.DataArray(0, dims=('time',), coords={'time': list(missing_times)}))
@@ -204,25 +220,25 @@ class CONT(object):
     #     return self.tab.hits()
     def hits(self,q=None):
         if isinstance(self.observation_array, xr.DataArray) and isinstance(self.forecast_array, xr.DataArray):
-            return self.tab.hits()
+            return int(self.tab.hits())
         else:
             return int(self.quant(q))
         
     def misses(self,q=None):
         if isinstance(self.observation_array, xr.DataArray) and isinstance(self.forecast_array, xr.DataArray):
-            return self.tab.misses()
+            return int(self.tab.misses())
         else:
             return int(self.quant(q))
 
     def false_alarms(self,q=None):
         if isinstance(self.observation_array, xr.DataArray) and isinstance(self.forecast_array, xr.DataArray):
-            return self.tab.false_alarms()
+            return int(self.tab.false_alarms())
         else:
             return int(self.quant(q))
 
     def correct_negatives(self,q=None):
         if isinstance(self.observation_array, xr.DataArray) and isinstance(self.forecast_array, xr.DataArray):
-            return self.tab.correct_negatives()
+            return int(self.tab.correct_negatives())
         else:
             return int(self.quant(q))
 
@@ -292,7 +308,11 @@ class CONT(object):
 
         '''
         if isinstance(self.observation_array, xr.DataArray) and isinstance(self.forecast_array, xr.DataArray):
-            return float(self.hits() / (self.hits() + self.misses()))
+            # return float(self.hits() / (self.hits() + self.misses()))
+            if (self.hits() + self.misses()) == 0:
+                return 0
+            else:
+                return float(self.tab.hit_rate())
         else:
             return self.quant(q)
 
@@ -308,7 +328,11 @@ class CONT(object):
 
         '''
         if isinstance(self.observation_array, xr.DataArray) and isinstance(self.forecast_array, xr.DataArray):
-            return float(self.false_alarms() / (self.false_alarms() + self.correct_negatives()))
+            # return float(self.false_alarms() / (self.false_alarms() + self.correct_negatives()))
+            if (self.correct_negatives() + self.false_alarms()) ==0:
+                return 0
+            else:
+                return float(self.tab.false_alarm_rate())
         else:
             return self.quant(q)
             
@@ -324,7 +348,7 @@ class CONT(object):
 
         '''
         if isinstance(self.observation_array, xr.DataArray) and isinstance(self.forecast_array, xr.DataArray):
-            return float((self.hits() + self.false_alarms()) / (self.hits() + self.misses()))
+            return (self.hits() + self.false_alarms()) / (self.hits() + self.misses())
         else:
             return self.quant(q)
     
@@ -601,28 +625,24 @@ if __name__ == '__main__':
     
     
     
-    rad = Observation("C:/netCDFs/fertig/radRW_ICO.nc").gen_observation_field().extract_by_shp("shp/Mugliz/mugliz_cats.shp").aggr_temporal(3).avg_areal_prec()
-    # icond2 = Deterministic_run("C:/netCDFs/3/3hour_icond2.nc").gen_deterministic_field().extract_by_shp("shp/Mugliz/mugliz_cats.shp").avg_areal_prec()
-    icond2eps = Ensemble_run("C:/netCDFs/3/3hour_icond2eps.nc").eps_extract_by_shp("shp/Mugliz/mugliz_merged.shp").avg_areal_prec()
+    # rad = Observation("C:/Users/elghorab/Desktop/NetCDFs/fertig/radRW_ICO.nc").gen_observation_field().extract_by_shp("shp/Mugliz/mugliz_cats.shp").aggr_temporal(3).avg_areal_prec()
+    # icond2 = Deterministic_run("C:/Users/elghorab/Desktop/netCDFs/3/3hour_icond2.nc").gen_deterministic_field().extract_by_shp("shp/Mugliz/mugliz_cats.shp").avg_areal_prec()
+    # icond2eps = Ensemble_run("C:/Users/elghorab/Desktop/netCDFs/3/3hour_icond2eps.nc").eps_extract_by_shp("shp/Mugliz/mugliz_merged.shp").avg_areal_prec().gen_quantiles(90) 
     # .gen_quantiles(90)
     
-    x = CONT(rad, icond2eps, 3)
+    # x = CONT(rad, icond2eps, 2.5)
     # x.hits(q=70)
     # x.csi(95)
     # x.f1(95)
-    x.fbias('mean')
-    x.pss(25)
+    # x.fbias('mean')
+    # x.pss(25)
     # x.sr()
     # a.f1()
     # # print(a.f1())
     # print(a.f2())
-    x.acc(50)    
-    x.pod()
-    x.pofd()
+    # x.acc(50)    
+    # x.pod()
+    # x.pofd()
     
+    a = CONT(rad, icond2eps, 2.5)
     
-    variable_names = list(icond2eps.average.data_vars)
-    member_arrays = [icond2eps.average[var_name] for var_name in variable_names]
-    forecast_dataarray = xr.concat(member_arrays, dim='member')
-    
-    crps = xs.crps_ensemble(rad.average, forecast_dataarray, dim='time')

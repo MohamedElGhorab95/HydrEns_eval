@@ -17,6 +17,7 @@ import matplotlib.pyplot as plt
 from shapely.geometry import mapping
 import rasterio
 from dask.distributed import Client
+import pandas as pd
 
 class Rainfall(object):
 
@@ -990,9 +991,47 @@ class Runoff(object):
     def __init__(self, forecast_file):
         
         self.fr = xr.open_dataset(forecast_file)
-        
+         
        
+    def aggr_temporal(self, resolution):
+        """
+        This method changes the temporal resolution of the Xarray type object.
 
+        Parameters
+        ----------
+
+        resolution : int
+            hours to sum over.
+
+        """
+        
+        # this prevents overwriting the original data object
+        newself = copy.deepcopy(self)
+        
+
+        #newself.arr = newself.arr.resample(time="{}H".format(resolution)
+         #                                  , loffset=pd.Timedelta(hours=resolution)).sum()
+
+        vals = []
+        times = []
+        
+        variable = newself.fr
+        
+        for i in range(0,len(variable.timeQ),resolution):
+            try:
+                times.append(variable.isel(timeQ=i+resolution).timeQ.values)
+                vals.append(variable.isel(timeQ=slice(i, i+resolution)).sum(dim='timeQ'))
+            except:
+               break
+        
+        new_arr = xr.concat(vals, dim='timeQ')
+        new_arr['timeQ'] = times
+
+        # Assign the new DataArray to the modified object and rename it
+        newself.fr = new_arr
+        newself.fr = newself.fr.rename(timeQ='time')
+        
+        return newself
 
 # =================================================================================================================        
 # =================================================================================================================
@@ -1001,16 +1040,24 @@ class Runoff(object):
 
 class R_Observation(Runoff):
 
-    def __init__(self, forecast_file):
-        Runoff.__init__(self, forecast_file)
+    def __init__(self, observation_file):
+        # Read the CSV file using pandas
+        df = pd.read_csv(observation_file)
+        df['begin'] = pd.to_datetime(df['begin']).dt.to_pydatetime()
+        df = df.rename(columns={'begin': 'time', 'hi': 'runoff_discharge'})
         
-    def gen_obs(self):
+        # # Convert the DataFrame to an xarray DataArray
+        self.fr = xr.DataArray(data=df["runoff_discharge"], coords=[df["time"]], dims=["time"])
+
         
-        import copy
-        newself = copy.deepcopy(self)
-        ds = newself.fr
-        newself.fr = ds.Q_obs_value
-        return newself
+        
+    # def gen_obs(self):
+        
+    #     import copy
+    #     newself = copy.deepcopy(self)
+    #     ds = newself.fr
+    #     newself.fr = ds.Q_obs_value
+    #     return newself
 
 
 # =================================================================================================================        
@@ -1023,6 +1070,22 @@ class R_Forecast(Runoff):
     def __init__(self, forecast_file):
         Runoff.__init__(self, forecast_file)
         
+       
+        # find the common time steps between timeQobs and timeQ
+        common_times = set(self.fr['timeQ'].values).intersection(self.fr['timeQobs'].values)
+        forecast_time = [time for time in self.fr['timeQ'].values if time not in common_times]
+        
+        self.fr["Q_for_mean_value"]= self.fr["Q_for_mean_value"].sel(timeQ=forecast_time)
+        self.fr["Q_q10"]= self.fr["Q_q10"].sel(timeQ=forecast_time)
+        self.fr["Q_q25"]= self.fr["Q_q25"].sel(timeQ=forecast_time)
+        self.fr["Q_q50"]= self.fr["Q_q50"].sel(timeQ=forecast_time)
+        self.fr["Q_q75"]= self.fr["Q_q75"].sel(timeQ=forecast_time)
+        self.fr["Q_q90"]= self.fr["Q_q90"].sel(timeQ=forecast_time)
+        
+        for e in range(20):
+            self.fr['eps_{}'.format(e)] = self.fr.Q_for_eps_value[e].sel(timeQ=forecast_time)
+       
+        
     def gen_quantiles(self, averaging):
         
         
@@ -1030,32 +1093,39 @@ class R_Forecast(Runoff):
         ds = newself.fr
         
         if averaging == 'mean':
-            # calculate ensemble mean
-            mean = ds.Q_for_eps_value.mean(dim='eps', skipna=True)
-            # add the mean to the dataset
-            ds = ds.assign(ensemble_val=mean)
             # extracting the mean variable to a dataXarray and structuring the array | forecast
-            newself.fr = ds.ensemble_val.rename("Runoff forecast | mean")
-        elif averaging == 'median':
-            # calculate ensemble median
-            median = ds.Q_for_eps_value.median(dim='eps', skipna=True)
-            # add the median to the dataset
-            ds = ds.assign(ensemble_val=median)
-            # extracting the median variable to a dataXarray and structuring the array | forecast
-            newself.fr = ds.ensemble_val.rename("Runoff forecast | median")
+            ds['Q_for_mean_value'] = ds.Q_for_mean_value.rename({'timeQ':'time'})
+            
+            newself.fr = ds.Q_for_mean_value.dropna(dim='time')
+        
         else:
             # calculate ensemble percentile
-            per = ds.Q_for_eps_value  # extract the ensembles to a new dimension and put it a new array
-            # calculate the percentile over this dimension
-            per = per.quantile(q=averaging / 100, dim='eps', skipna=True)
-
-            # assing the ensemble variable in the original data set to the created array
-            ds = ds.assign(ensemble_val=per)
+            per = "Q_q{}".format(averaging)  # extract the ensembles to a new dimension and put it a new array
+            
             # extracting the mean variable to a dataXarray and renaming it
-            newself.fr = ds.ensemble_val.rename("Runoff forecast | {}th percentile".format(averaging))
-
-        return newself
+            ds[per] = ds[per].rename({'timeQ':'time'})
+            
+            newself.fr = ds[per].dropna(dim='time')
         
+        return newself
+    
+    def gen_ensmembers(self):
+        
+        newself = copy.deepcopy(self)
+        ds = newself.fr
+        
+        da = xr.Dataset()
+        
+        for e in range(20):
+            
+            da['eps_{}'.format(e)] = ds['eps_{}'.format(e)].dropna('timeQ')
+          
+            
+        da = da.rename_dims({'timeQ':'time'})
+        da = da.rename_vars({'timeQ': 'time'})
+        newself.fr = da
+        
+        return newself
         
         
 
