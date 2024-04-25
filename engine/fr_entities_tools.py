@@ -1272,12 +1272,12 @@ if __name__ == '__main__':
     
     # icond2 = Deterministic_run("C:/netCDFs/3/3hour_icond2.nc").gen_deterministic_field()
     
-    cosmod2 = Deterministic_run("C:/netCDFs/3/3hour_cosmod2.nc").gen_deterministic_field()
+    # cosmod2 = Deterministic_run("C:/netCDFs/3/3hour_cosmod2.nc").gen_deterministic_field()
     
     
-    cosmod2eps = Ensemble_run("C:/netCDFs/3/3hour_cosmod2eps.nc").eps_extract_by_shp("shp/Mugliz/mugliz_cats.shp").avg_areal_prec()
+    # cosmod2eps = Ensemble_run("C:/netCDFs/3/3hour_cosmod2eps.nc").eps_extract_by_shp("shp/Mugliz/mugliz_cats.shp").avg_areal_prec()
     
-    rad = Observation('C:/netCDFs/fertig/radRW_cosmod2eps.nc').gen_observation_field().aggr_temporal(3).extract_by_shp("shp/Mugliz/mugliz_cats.shp").avg_areal_prec()
+    # rad = Observation('C:/netCDFs/fertig/radRW_cosmod2eps.nc').gen_observation_field().aggr_temporal(3).extract_by_shp("shp/Mugliz/mugliz_cats.shp").avg_areal_prec()
     # a = icond2.extract_by_shp("shp/Mugliz/mugliz_cats.shp")
     
     # a.avg_areal_prec().average.plot()

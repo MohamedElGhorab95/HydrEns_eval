@@ -14,12 +14,12 @@ from tqdm import tqdm
 
 
 def load_event_file(leadtime):
-    source_file_path = "data_generation/nc_paths.txt"
+    source_file_path = "in/nc_paths.txt"
     with open(source_file_path, 'r') as f:
         # Read all the lines in the file
         lines = f.readlines()
         
-        netcdf = lines[1] 
+        netcdf = lines[0] 
         
         
      
@@ -34,8 +34,9 @@ def load_event_file(leadtime):
 
 
 def load_catchment(name):
+    
     # loading the catchment of interest
-    source_file_path = "data_generation/paths.txt"
+    source_file_path = "in/paths.txt"
     with open(source_file_path, 'r') as f:
         # Read all the lines in the file
         lines = f.readlines()
@@ -209,7 +210,7 @@ def plot_curves(results, catchment_name):
         ax.set_ylabel(res)
         
         print('exporting results to file')
-        plt.savefig("//vs-grp07.zih.tu-dresden.de/howa/work/students/Mohamed_Elghorab/results/{}/{}".format(catchment_name,res), bbox_inches = 'tight')        
+        plt.savefig("E:/results/{}/{}".format(catchment_name,res), bbox_inches = 'tight')        
     
     return plt.show()
     
@@ -226,7 +227,11 @@ def evaluate_single(cname):
 
 
 tic = time.time()
-cats = ['Dohna', "Oelsnitz", 'Zittau', 'Adorf', 'Geising', 'Grossschoenau',
+# cats = ['Dohna', "Oelsnitz", 'Zittau', 'Adorf', 'Geising', 'Grossschoenau',
+#         'Bad Elster', 'Lauenstein', 'Niederoderwitz','Seifhennersdorf']
+
+
+cats = ["Oelsnitz", 'Zittau', 'Adorf', 'Geising', 'Grossschoenau',
         'Bad Elster', 'Lauenstein', 'Niederoderwitz','Seifhennersdorf']
 
 for cat in cats:

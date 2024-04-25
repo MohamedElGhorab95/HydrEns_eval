@@ -27,7 +27,7 @@ def find_folders(directory, date_list):
 
 def gen_runoff_datasets(dates, catchment):
     
-    path = "//vs-grp07.zih.tu-dresden.de/howa/work/students/Mohamed_Elghorab/forecast_system/ForData"
+    path = "//vs-grp07.zih.tu-dresden.de/howa/work/students/Mohamed_Elghorab/Mohamed Elghorab_MSc_Working_files/forecast_system/ForData"
     
     for lead in np.arange(3,25,3):
         print('generating for leadtime: {}hrs'.format(lead))
@@ -72,22 +72,34 @@ def gen_runoff_datasets(dates, catchment):
                                     , 'Q_mean':Qm.sortby('time').drop_duplicates('time')})
         
         print('exporting dataset.........')
-        dataset_final.to_netcdf('//vs-grp07.zih.tu-dresden.de/howa/work/students/Mohamed_Elghorab/netCDFs/Runoff/{}hrs_leadtime_{}.nc'.format(lead,catchment))
+        # dataset_final.to_netcdf('//vs-grp07.zih.tu-dresden.de/howa/work/students/Mohamed_Elghorab/Mohamed Elghorab_MSc_Working_files/netCDFs/Runoff/{}hrs_leadtime_{}.nc'.format(lead,catchment))
+        
+        dataset_final.to_netcdf('E:/Data2/NetCDFs/Runoff/{}hrs_leadtime_{}.nc'.format(lead,catchment))
+        
         
         EPS = EPS.sortby('time')
         
         ENS = EPS.drop_duplicates('time')
         
-        ENS.to_netcdf('//vs-grp07.zih.tu-dresden.de/howa/work/students/Mohamed_Elghorab/netCDFs/Runoff/{}hrs_leadtime_{}_EPS.nc'.format(lead,catchment))
+        # ENS.to_netcdf('//vs-grp07.zih.tu-dresden.de/howa/work/students/Mohamed_Elghorab/Mohamed Elghorab_MSc_Working_files/netCDFs/Runoff/{}hrs_leadtime_{}_EPS.nc'.format(lead,catchment))
+        ENS.to_netcdf('E:/Data2/NetCDFs/Runoff/{}hrs_leadtime_{}_EPS.nc'.format(lead,catchment))
 
 
 
 
 # cat = ['_5661371_Oelsnitz_WeisseElster_data', '_56611313_BadElster_WeisseElster_data', '_5661311_Adorf_WeisseElster_data']
-cat = ['_53718979_Dohna_Mueglitz_data', '_5371831_Lauenstein4_Mueglitz_data', '_5371823_Geising1_WeisseMueglitz_data' ]
-# cat = ['_67414799_Zittau_Mandau_data', '_67414651_Niederoderwitz_Mandau_data', '_67414511_Grossschoenau_Mandau_data', '_67414311_Seifhennersdorf_Mandau_data']
+# cat = ['_53718979_Dohna_Mueglitz_data', '_5371831_Lauenstein4_Mueglitz_data', '_5371823_Geising1_WeisseMueglitz_data' ]
+cat = ['_67414799_Zittau_Mandau_data', '_67414651_Niederoderwitz_Mandau_data', '_67414511_Grossschoenau_Mandau_data', '_67414311_Seifhennersdorf_Mandau_data']
 
 for c in cat:
-    gen_runoff_datasets(['2021','2022'], c)
+    gen_runoff_datasets(['2021','2022','2023'], c)
     
- 
+
+# cat = ['_5661371_Oelsnitz_WeisseElster_data', '_56611313_BadElster_WeisseElster_data', '_5661311_Adorf_WeisseElster_data']    
+# for c in cat:
+#     gen_runoff_datasets(['2021','2022','2023'], c)
+  
+    
+# cat = ['_53718979_Dohna_Mueglitz_data', '_5371831_Lauenstein4_Mueglitz_data', '_5371823_Geising1_WeisseMueglitz_data' ]    
+# for c in cat:
+#     gen_runoff_datasets(['2021','2022','2023'], c)    

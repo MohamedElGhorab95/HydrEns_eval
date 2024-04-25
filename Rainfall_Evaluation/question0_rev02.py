@@ -13,12 +13,12 @@ import time
 
 
 def load_event_file(leadtime):
-    source_file_path = "data_generation/nc_paths.txt"
+    source_file_path = "in/nc_paths.txt"
     with open(source_file_path, 'r') as f:
         # Read all the lines in the file
         lines = f.readlines()
         
-        netcdf = lines[1] 
+        netcdf = lines[0] 
         
         
      
@@ -34,7 +34,7 @@ def load_event_file(leadtime):
 
 def load_catchment(name):
     # loading the catchment of interest
-    source_file_path = "data_generation/paths.txt"
+    source_file_path = "in/paths.txt"
     with open(source_file_path, 'r') as f:
         # Read all the lines in the file
         lines = f.readlines()
@@ -105,8 +105,8 @@ def evaluate_for_catchment(cats):
     max_lead = 24
 
     crps = []
-    rmse = []
-    disc = []
+    # rmse = []
+    # disc = []
    
     for lead in range(3,max_lead+1,3):
         print('Catchment: {}\ncalculating for lead time: {}hrs'.format(cats,lead),flush= True)
@@ -117,11 +117,12 @@ def evaluate_for_catchment(cats):
         library = gen_for_catchment(cats,files)
 
         crps.append(Full_Ens(library['radar'], library['ensemble_run']).crps())
-        rmse.append(Full_Ens(library['radar'], library['ensemble_run']).rmse())
-        disc.append(Full_Ens(library['radar'], library['ensemble_run']).disc_dia())    
+        # rmse.append(Full_Ens(library['radar'], library['ensemble_run']).rmse())
+        # disc.append(Full_Ens(library['radar'], library['ensemble_run']).disc_dia())    
         del library
     
-    results = {'CRPS':crps, 'RMSE':rmse, 'Discrimination':disc}
+    # results = {'CRPS':crps, 'RMSE':rmse, 'Discrimination':disc}
+    results = {'CRPS':crps}
    
     return results
 
@@ -137,8 +138,8 @@ def create_for_regions():
     region2 = {'Dohna':200, 'Lauenstein':76, 'Geising':26 }
     region2 = dict(sorted(region2.items()))
     
-    region3 = { 'Zittau':279, 'Grossschoenau': 162, 'Seifhennersdorf':75,'Niederoderwitz':29 }
-    region3 = dict(sorted(region3.items()))
+    # region3 = { 'Zittau':279, 'Grossschoenau': 162, 'Seifhennersdorf':75,'Niederoderwitz':29 }
+    # region3 = dict(sorted(region3.items()))
     
     data1   = {key: [None,region1[key]]  for key in region1.keys()}
     for a in data1.keys():
@@ -150,13 +151,13 @@ def create_for_regions():
             data2[a][0]=evaluate_for_catchment(a)
     
     
-    data3   = {key: [None,region3[key]]  for key in region3.keys()}
-    for a in data3.keys():
-            data3[a][0]=evaluate_for_catchment(a)
+    # data3   = {key: [None,region3[key]]  for key in region3.keys()}
+    # for a in data3.keys():
+    #         data3[a][0]=evaluate_for_catchment(a)
     
     
-    return [data1, data2, data3]
-
+    # return [data1, data2, data3]
+    return [ data1, data2 ]
 
 
 def plot_curves(results):
@@ -167,7 +168,8 @@ def plot_curves(results):
     
      
     region = 0
-    regions = ['Weiße Elster region', 'Müglitz region', 'Mandau region']
+    # regions = ['Weiße Elster region', 'Müglitz region', 'Mandau region']
+    regions = [ 'Weiße Elster region', 'Müglitz region']
     
     for res in results:
         
@@ -180,47 +182,47 @@ def plot_curves(results):
         ax.legend()
         plt.xticks(leads)
         ax.set_xlim(3,max_lead)    
-        ax.set_ylim(0,0.6) 
+        ax.set_ylim(0.15, 0.45) 
         ax.set_title("Performance of ICOND2 Ensemble forecast  \n{}".format(regions[region]))
         ax.set_xlabel('Leadtime (hrs)')
         ax.set_ylabel('CRPS')
         
-        plt.savefig("//vs-grp07.zih.tu-dresden.de/howa/work/students/Mohamed_Elghorab/results/CRPS_{}".format(regions[region]), bbox_inches = 'tight')        
+        # plt.savefig("E:/results/CRPS_{}".format(regions[region]), bbox_inches = 'tight')        
         
-        # create the figure
-        sns.set_theme(style="whitegrid")
-        fig, ax = plt.subplots(dpi=750)
-        for cat in res.keys():
+        # # create the figure
+        # sns.set_theme(style="whitegrid")
+        # fig, ax = plt.subplots(dpi=750)
+        # for cat in res.keys():
             
-            # plotting the results
-            plt.plot(leads, res[cat][0]['RMSE'],label = cat)
-        ax.legend()
-        plt.xticks(leads)
-        ax.set_xlim(3,max_lead) 
-        ax.set_ylim(1.0,2.8)
-        ax.set_title("Performance of ICOND2 Ensemble forecast  \n{}".format(regions[region]))
-        ax.set_xlabel('Leadtime (hrs)')
-        ax.set_ylabel('RMSE')
+        #     # plotting the results
+        #     plt.plot(leads, res[cat][0]['RMSE'],label = cat)
+        # ax.legend()
+        # plt.xticks(leads)
+        # ax.set_xlim(3,max_lead) 
+        # ax.set_ylim(1.0,2.8)
+        # ax.set_title("Performance of ICOND2 Ensemble forecast  \n{}".format(regions[region]))
+        # ax.set_xlabel('Leadtime (hrs)')
+        # ax.set_ylabel('RMSE')
         
-        plt.savefig("//vs-grp07.zih.tu-dresden.de/howa/work/students/Mohamed_Elghorab/results/RMSE_{}".format(regions[region]), bbox_inches = 'tight')        
+        # plt.savefig("E:/results/RMSE_{}".format(regions[region]), bbox_inches = 'tight')        
         
         
-        # create the figure
-        sns.set_theme(style="whitegrid")
-        fig, ax = plt.subplots(dpi=750)
-        for cat in res.keys():
+        # # create the figure
+        # sns.set_theme(style="whitegrid")
+        # fig, ax = plt.subplots(dpi=750)
+        # for cat in res.keys():
             
-            # plotting the results
-            plt.plot(leads, res[cat][0]['Discrimination'],label = cat)
-        ax.legend()
-        plt.xticks(leads)
-        ax.set_xlim(3,max_lead) 
-        ax.set_ylim(1.2,1.65)
-        ax.set_title("Performance of ICOND2 Ensemble forecast  \n{}".format(regions[region]))
-        ax.set_xlabel('Leadtime (hrs)')
-        ax.set_ylabel('Discrimination')
+        #     # plotting the results
+        #     plt.plot(leads, res[cat][0]['Discrimination'],label = cat)
+        # ax.legend()
+        # plt.xticks(leads)
+        # ax.set_xlim(3,max_lead) 
+        # ax.set_ylim(1.2,1.65)
+        # ax.set_title("Performance of ICOND2 Ensemble forecast  \n{}".format(regions[region]))
+        # ax.set_xlabel('Leadtime (hrs)')
+        # ax.set_ylabel('Discrimination')
         
-        plt.savefig("//vs-grp07.zih.tu-dresden.de/howa/work/students/Mohamed_Elghorab/results/Disc_{}".format(regions[region]), bbox_inches = 'tight')        
+        # plt.savefig("E:/results/Disc_{}".format(regions[region]), bbox_inches = 'tight')        
         
         
         region+=1

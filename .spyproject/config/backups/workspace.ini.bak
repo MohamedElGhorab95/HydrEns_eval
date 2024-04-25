@@ -1,0 +1,12 @@
+[workspace]
+restore_data_on_startup = True
+save_data_on_exit = True
+save_history = True
+save_non_project_files = False
+project_type = 'empty-project-type'
+recent_files = ['..\\results\\forpres.py', 'data_generation\\data_collection_rev01.py', 'data_generation\\create_lt_data.py', 'Rainfall_Evaluation\\question2b_rev06.py', 'engine\\fr_ROCtools.py']
+
+[main]
+version = 0.2.0
+recent_files = []
+

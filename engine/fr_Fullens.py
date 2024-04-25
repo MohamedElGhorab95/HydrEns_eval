@@ -67,7 +67,7 @@ class Full_Ens(object):
        error = []
       
        for mem in range(20):
-           error.append(float(xs.rmse(self.observation_array,self.forecast_array[mem] ) ) ) 
+           error.append(float(xs.rmse(self.observation_array,self.forecast_array[mem] ) / np.mean(self.observation_array)) ) 
            
        return np.mean(error)  
        
@@ -97,14 +97,16 @@ class Full_Ens(object):
         return np.around(score,3)
     
     
-# rad = Observation("C:/netCDFs/fertig/radRW_ICO.nc").gen_observation_field().extract_by_shp("shp/Mugliz/mugliz_cats.shp").aggr_temporal(3).avg_areal_prec()
+    
+# rad = Observation("Z:/work/students/Mohamed_Elghorab/Mohamed Elghorab_MSc_Working_files/netCDFs/fertig/radRW_ICO.nc").gen_observation_field().extract_by_shp("C:/Users/user/Documents/GitHub/HydrEns_eval/shp/Mugliz/mugliz_cats.shp").aggr_temporal(3).avg_areal_prec()
 
-# icond2eps = Ensemble_run("C:/netCDFs/6/6hour_icond2eps.nc").eps_extract_by_shp("shp/Mugliz/mugliz_merged.shp").avg_areal_prec()    
+# icond2eps = Ensemble_run("Z:/work/students/Mohamed_Elghorab/Mohamed Elghorab_MSc_Working_files//netCDFs/3/3hour_icond2eps.nc").eps_extract_by_shp("C:/Users/user/Documents/GitHub/HydrEns_eval/shp/Mugliz/mugliz_merged.shp").avg_areal_prec()    
     
 # x = Full_Ens(rad, icond2eps)
 
 # # crps = x.crps()
 # # brier = x.brier(3)
+
 
 # # er = x.rmse(10)
 # a = x.disc_dia()

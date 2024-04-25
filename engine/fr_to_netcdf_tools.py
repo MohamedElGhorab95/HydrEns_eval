@@ -140,23 +140,28 @@ def CosmoD2toNetCDF(ST, datafolder, longitude, latitude, nearestpoints, outputfi
     # creating an instance of Icon object
     cosmod2 = CosmoD2()
     # looping over forecast cycle starting times
+    mode = 'create'
     for x in ST:
-        y_date = x.strftime("%Y") 
-        m_date = x.strftime("%m") 
-        d_date = x.strftime("%d")
-        # read Icon
-        cosmod2.read_file(x, datafolder+y_date+'/'+ y_date+m_date+d_date,forecast_hours=24
-                          , short='int16', scale_factor=0.01, fill_value=-1)
-        # gridding the data
-        cosmod2.regrid(lon_target=longitude, lat_target=latitude, file_nearest=nearestpoints)
-        # exporting to netcdf if no file exists i.e. first forecast cycle
-        if x == ST[0]:
-            cosmod2.export_netcdf(filename=outputfile
-            , data_kwargs={'compression': 'zlib', 'complevel': 4},
-                                  data_format='i2', scale_factor_nc=0.01, scale_undo=True)
-        # appending to the netcdf file
-        else:
-            cosmod2.export_netcdf_append(filename=outputfile)
+        try:
+            y_date = x.strftime("%Y") 
+            m_date = x.strftime("%m") 
+            d_date = x.strftime("%d")
+            # read Icon
+            cosmod2.read_file(x, datafolder+y_date+'/'+ y_date+m_date+d_date,forecast_hours=24
+                              , short='int16', scale_factor=0.01, fill_value=-1)
+            # gridding the data
+            cosmod2.regrid(lon_target=longitude, lat_target=latitude, file_nearest=nearestpoints)
+            # exporting to netcdf if no file exists i.e. first forecast cycle
+            if mode == 'create':
+                cosmod2.export_netcdf(filename=outputfile
+                , data_kwargs={'compression': 'zlib', 'complevel': 4},
+                                      data_format='i2', scale_factor_nc=0.01, scale_undo=True)
+                mode = 'append'
+            # appending to the netcdf file
+            else:
+                cosmod2.export_netcdf_append(filename=outputfile)
+        except:
+                pass
     
     os.chdir('..')
 # =========================================================================================================================
@@ -193,21 +198,24 @@ def CosmoD2EPStoNetCDF(ST, datafolder, longitude, latitude, nearestpoints, outpu
     cosmod2eps = CosmoD2EPS()
     # looping over forecast cycle starting times
     for x in ST:
-        y_date = x.strftime("%Y") 
-        m_date = x.strftime("%m") 
-        d_date = x.strftime("%d")
-        # read Icon ensemble files
-        cosmod2eps.read_file(x, datafolder+y_date+'/'+ y_date+m_date+d_date, forecast_hours=24
-                             , short='int16', scale_factor=0.01, fill_value=-1)
-        # gridding the data
-        cosmod2eps.regrid(lon_target=longitude, lat_target=latitude, file_nearest=nearestpoints)
-        # exporting to netcdf if no file exists i.e. first forecast cycle
-        if x == ST[0]:
-            cosmod2eps.export_netcdf(filename=outputfile,  data_kwargs={'compression': 'zlib', 'complevel': 4},
-                                    data_format='i2', scale_factor_nc=0.01, scale_undo=True
-)
-        else:
-            cosmod2eps.export_netcdf_append(filename=outputfile)
+        try:
+            y_date = x.strftime("%Y") 
+            m_date = x.strftime("%m") 
+            d_date = x.strftime("%d")
+            # read Icon ensemble files
+            cosmod2eps.read_file(x, datafolder+y_date+'/'+ y_date+m_date+d_date, forecast_hours=24
+                                 , short='int16', scale_factor=0.01, fill_value=-1)
+            # gridding the data
+            cosmod2eps.regrid(lon_target=longitude, lat_target=latitude, file_nearest=nearestpoints)
+            # exporting to netcdf if no file exists i.e. first forecast cycle
+            if x == ST[0]:
+                cosmod2eps.export_netcdf(filename=outputfile,  data_kwargs={'compression': 'zlib', 'complevel': 4},
+                                        data_format='i2', scale_factor_nc=0.01, scale_undo=True
+    )
+            else:
+                cosmod2eps.export_netcdf_append(filename=outputfile)
+        except:
+                  pass  
 
     os.chdir('..')    
 # =========================================================================================================================
@@ -350,6 +358,9 @@ def radolantoNetCDF(radolan_times, datafolder, idx_lon, idx_lat, outputfile):
         rad.read_file(start_datetime=x, directory=datafolder+f_date
                         , short='int16', scale_factor=0.01
         , fill_value=-1)
+        # rad.read_file(start_datetime=x, directory=datafolder
+        #                 , short='int16', scale_factor=0.01
+        # , fill_value=-1)
         # gridding the data
         rad.crop(idx_west=idx_lon[0], idx_east=idx_lon[1] - 1,
                  idx_south=idx_lat[1] - 1, idx_north=idx_lat[0])
@@ -380,7 +391,7 @@ if __name__ == '__main__':
 
     # fortime = timeframe((2020,6,27,0), (2020,6,28,0), "forecast")
 
-    radtime = timeframe((2022,9,16,0), (2022,9,20,0), "radar")
+    radtime = timeframe((2014,10,21,0), (2014,10,26,21), "radar")
 
 
 
@@ -408,3 +419,17 @@ if __name__ == '__main__':
     #                   lon, lat,
     #                   "D:/Erasmus_FRM/05.Masterarbeit/03.Bearbeitung/01.Code/WorkspaceSachsen_nearestpoints.npz",
     #                   "D:/Erasmus_FRM/05.Masterarbeit/03.Bearbeitung/02.netCDFs/Icond2EPS/icond2eps__09_10_09_22.nc")
+    
+    
+    
+    
+    
+    
+    radolantoNetCDF(radtime, datafolder="Z:/work/Mohamed/01_Bearbeitung/00_Kreischa_NA_Modell/00_Sontiges/radolan/RW201410",
+                    idx_lon=id_lon, idx_lat=id_lat, 
+                    outputfile="Z:/work/Mohamed/01_Bearbeitung/00_Kreischa_NA_Modell/00_Sontiges/radolan/RW201410")
+    
+                    #outputfile="C:/Users/user/Desktop/radar")
+    
+    
+    

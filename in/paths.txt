@@ -1,0 +1,21 @@
+# paths to catchment shapefiles
+# mandau 
+shp/Mandau/egp6741491_Zittau_5_TEZG_neu.shp
+# mugliz
+shp/Mugliz/mugliz_merged.shp
+# weiße  
+shp/WeiseElster/OelsnitzTEZG_DHDN.shp
+# adorf
+shp/Adorf/Adorf.shp
+# badelster
+shp/BadElster/BadElster.shp
+# Lauenstein4
+shp/Lauenstein4/Lauenstein4.shp
+# Niederoderwitz
+shp/Niederoderwitz/Niederoderwitz.shp
+# Seifhennersdorf
+shp/Seifennersdorf/Seifennersdorf.shp
+# Geising
+shp/Geising/Geising.shp
+# Grossschönau
+shp/Grossschoenau/Grossschoenau.shp
