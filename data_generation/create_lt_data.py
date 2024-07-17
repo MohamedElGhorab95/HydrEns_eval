@@ -12,14 +12,14 @@ import concurrent.futures
 import xarray as xr
 import datetime as dt
 import platform
-
+import os
 
 
         
 
-def load_events():
+def load_events(event_file_name):
     # reading the events record
-    with open('in/Cosmo_events.txt','r') as f:
+    with open('in/{}'.format(event_file_name),'r') as f:
         lines = f.readlines()[1:]
     ################################################################################################
     # creating a dictionary of the events
@@ -46,7 +46,10 @@ def load_events():
 
 def process_lead(lead, netcdf_file, temp_res, run_name, events):
    
-    # ...
+   
+    
+    
+    netcdf_file = os.getcwd()+'/Data/'+ netcdf_file
     
     mode = 'create'
     for ev in events.keys():
@@ -57,8 +60,10 @@ def process_lead(lead, netcdf_file, temp_res, run_name, events):
             print('leadtime {}hrs \ngenerating event............ {}'.format(lead,ev))
             
             t1 = data_low_level.sel(start_time=slice(events[ev][0],events[ev][1]))
-            l_lat = np.linspace(51.921707, 49.991165, 212).tolist()
-            l_lon = np.linspace(11.634748, 15.226268, 253).tolist()
+            # l_lat = np.linspace(51.921707, 49.991165, 212).tolist()
+            # l_lon = np.linspace(11.634748, 15.226268, 253).tolist()
+            l_lon = t1.variables['longitude'][0,:].values
+            l_lat = t1.variables['latitude'][:,0].values
             # assigning the actual coordinates
             t1 = t1.assign_coords(lat=l_lat, lon=l_lon)
             # drop unnecessary variables
@@ -98,29 +103,7 @@ def process_lead(lead, netcdf_file, temp_res, run_name, events):
     # Save the lead dataset
     # dataset_final.to_netcdf('//vs-grp07.zih.tu-dresden.de/howa/work/students/Mohamed_Elghorab/netCDFs/{}/{}hour_{}.nc'.format(lead, lead, run_name))
 
-    dataset_final.to_netcdf('E:/Data2/netCDFs/{}/{}hour_{}.nc'.format(lead, lead, run_name))
-
-
-
-# def gen_leadtime_netcdf(events, netcdf_file, run_name):
-#     # Your existing code ...
-       
-    
-#     leadt= np.arange(3,25,3)
-#     temp_res = 3
-    
-#     # Create a ThreadPoolExecutor with the desired number of threads
-#     # num_threads = 2
-#     # executor = concurrent.futures.ProcessPoolExecutor(max_workers=num_threads)
-#     num_threads = 1
-#     executor_cls = concurrent.futures.ProcessPoolExecutor if platform.system() != "Windows" else concurrent.futures.ThreadPoolExecutor
-#     executor = executor_cls(max_workers=num_threads)
-    
-#     # Submit the tasks to the executor
-#     futures = [executor.submit(process_lead, lead, netcdf_file, temp_res, run_name, events) for lead in leadt]
-    
-#     # Wait for all tasks to complete
-#     concurrent.futures.wait(futures)
+    dataset_final.to_netcdf('{}/Data/NetCDFs/{}/{}hour_{}.nc'.format(os.getcwd(),lead, lead, run_name))
 
 
 
@@ -128,50 +111,17 @@ def process_lead(lead, netcdf_file, temp_res, run_name, events):
 
 
 
-
+################################################################################################
 
 if __name__ == '__main__':
-    events = load_events()
+################################################################################################    
     
-    # gen_leadtime_netcdf(events, 'E:/Data/netCDFs/fertig/icond2eps_ev.nc', 'icond2eps')
+    events = load_events('Cosmo_events.txt')
     
-    # for lt in np.arange(9,25,3): 
-    #     process_lead(lt, 'E:/Data2/netCDFs/fertig/cosmod2_ev.nc', 3, 'cosmod2', events)
     
-    for lt in np.arange(12,25,3): 
-        process_lead(lt, 'E:/Data2/netCDFs/fertig/cosmod2eps_ev.nc', 3, 'cosmod2eps', events)
+    for lt in np.arange(3,25,3): 
+        process_lead(lt, 'cosmod2eps_ev.nc', 3, 'cosmod2eps', events)
     
-
-
-
-
-
-# if __name__ == '__main__':
-
-#     # generating lead time netcdfs for icond
-#     gen_leadtime_netcdf(events, 'E:/Data/netCDFs/fertig/icond2_ev.nc','icond2')
-
-
-
-
-
-
-# netcdf_file = 'E:/Data/netCDFs/fertig/cosmod2eps_ev.nc'
-
-
-
-# data_low_level = xr.open_dataset(netcdf_file,chunks='auto')
-# data_low_level = data_low_level.rename({"time": "start_time", "forecast_time": "time"})
-
-
-
-
-# data_low_level.start_time
-
-# data_low_level.forecast_time
-
-
-# a = data_low_level.isel(forecast_time=slice(0,100))
 
 
 

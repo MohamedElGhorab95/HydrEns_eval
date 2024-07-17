@@ -825,11 +825,11 @@ class Ensemble_run(Forecast):
         newself = copy.deepcopy(self)
         
                
-        
-        if isinstance(self.average,int) == False:
-        # if self.average !=0:
-            ds = self.average
-        else:
+        try:
+            if isinstance(self.average,int) == False:
+            # if self.average !=0:
+                ds = self.average
+        except:
             ds = copy.deepcopy(self.original)
         
         # Enable Dask and chunk the dataset along desired dimensions
@@ -1144,7 +1144,7 @@ if __name__ == '__main__':
         """
 
         # generate an observation object
-        rad = Observation("C:/Project/radRW_juli21.nc", 12)
+        rad = Observation("Data/NetCDFs/Example/radRW_example.nc", 48)
         # generating a rainfall field
         # only needed for manual low level operations, however if the object is to be 
         # used in other classes (Cont, ROC) it gets generated automatically
@@ -1152,21 +1152,21 @@ if __name__ == '__main__':
         # aggregating the rainfall field
         rad_agg = rad.aggr_spatial(3)
         # extracting a part of the observation using geographical coordinates
-        sub_rad = Observation("C:/Project/radRW_juli21.nc", 12).extract_by_coords(50.02, 51.01, 11.66, 12.68)
+        sub_rad = Observation("Data/NetCDFs/Example/radRW_example.nc", 48).extract_by_coords(50.02, 51.01, 11.66, 12.68)
         # mean areal rainfall
         rad_avg = rad.avg_areal_prec()
 
         # Weise Elster
-        weise = rad.extract_by_shp("C:/Project/shp/WeiseElster/OelsnitzTEZG_DHDN.shp")
+        weise = rad.extract_by_shp("shp/WeiseElster/OelsnitzTEZG_DHDN.shp")
 
         rad_3 = rad.aggr_temporal(3)
 
-        rad.plot([2021, 7, 14, 1])
-        rad_agg.plot([2021, 7, 14, 1])
-        sub_rad.plot([2021, 7, 14, 1])
+        rad.plot([2021,10,4, 23])
+        rad_agg.plot([2021,10,4, 23])
+        sub_rad.plot([2021,10,4, 23])
 
-        for i in range(1, 12):
-            weise.plot([2021, 7, 14, i])
+        for i in range(1, 23):
+            weise.plot([2021,10,4, i])
 
         return rad, rad_agg, sub_rad, rad_avg, weise, rad_3
 
@@ -1180,7 +1180,7 @@ if __name__ == '__main__':
         """
 
         # generate the forecast object
-        icond2 = Deterministic_run("C:/Project/icond2_3_juli21.nc", 1, 12)
+        icond2 = Deterministic_run("Data/NetCDFs/Example/icond2_example.nc", 1, 12)
         # generating a rainfall field
         # only needed for manual low level operations, however if the object is to be 
         # used in other classes (Cont, ROC) it gets generated automatically
@@ -1188,13 +1188,13 @@ if __name__ == '__main__':
         # aggregating the rainfall field
         icon_agg = icond2.aggr_spatial(2)
         # extracting a part of the observation using geographical coordinates
-        sub_icon = Deterministic_run("C:/Project/icond2_3_juli21.nc", 1, 12).limit_to_shp("C:/Project/shp/Mugliz/mugliz_cats")
+        sub_icon = Deterministic_run("Data/NetCDFs/Example/icond2_example.nc", 1, 12).limit_to_shp("shp/Mugliz/mugliz_cats")
         # mean areal rainfall
         icon_avg = icond2.avg_areal_prec()
 
-        mugliz = icond2.extract_by_shp("C:/Project/shp/Mugliz/mugliz_cats.shp")
+        mugliz = icond2.extract_by_shp("shp/Mugliz/mugliz_cats.shp")
 
-        mandau = icond2.extract_by_shp("C:/Project/shp/Mandau/egp6741491_Zittau_5_TEZG_neu.shp")
+        mandau = icond2.extract_by_shp("shp/Mandau/egp6741491_Zittau_5_TEZG_neu.shp")
 
         ico_3 = icond2.aggr_temporal(4)
 
@@ -1209,7 +1209,7 @@ if __name__ == '__main__':
         return icond2, icon_agg, sub_icon, icon_avg, ico_3
 
 
-    # icond2, icon_agg, sub_icon, icon_avg,ico_3 = test_Det()
+    # icond2, icon_agg, sub_icon, icon_avg, ico_3 = test_Det()
 
     def test_EPS():
         """
@@ -1218,67 +1218,42 @@ if __name__ == '__main__':
         """
 
         # generate the forecast object
-        eps = Ensemble_run("C:/Project/icond2eps_3_juli21.nc", 1)
+        eps = Ensemble_run("Data/NetCDFs/Example/icond2eps_example.nc", 1)
         # generating a rainfall field for a specific quantile
         # only needed for manual low level operations, however if the object is to be 
         # used in other classes (Cont, ROC) it gets generated automatically
-        eps95 = eps.gen_quantiles(95)  # 95th quantile      
-        epsavg = eps.gen_quantiles("mean")  # mean
-        epsmed = eps.gen_quantiles("median")  # median
+        # eps95 = eps.gen_quantiles(95)  # 95th quantile      
+        # epsavg = eps.gen_quantiles("mean")  # mean
+        # epsmed = eps.gen_quantiles("median")  # median
 
         # extracting a part of the forecast using geographical coordinates
         # the method eps_accelerate_by_shp is used instead of the general extract_by_coords
         # to speed up the calculation process for the smaller areas
-        sub95 = eps.eps_accelerate_by_shp("C:/Project/shp/WeiseElster/OelsnitzTEZG_DHDN").gen_quantiles(95)
-        subavg = eps.eps_accelerate_by_shp("C:/Project/shp/WeiseElster/OelsnitzTEZG_DHDN").gen_quantiles("mean")
-        submed = eps.eps_accelerate_by_shp("C:/Project/shp/WeiseElster/OelsnitzTEZG_DHDN").gen_quantiles("median")
+        sub95 = eps.eps_accelerate_by_shp("shp/WeiseElster/OelsnitzTEZG_DHDN").gen_quantiles(95)
+        subavg = eps.eps_accelerate_by_shp("shp/WeiseElster/OelsnitzTEZG_DHDN").gen_quantiles("mean")
+        submed = eps.eps_accelerate_by_shp("shp/WeiseElster/OelsnitzTEZG_DHDN").gen_quantiles("median")
 
         # mean areal rainfall
 
-        m_eps95 = eps95.avg_areal_prec()
-        m_epsavg = epsavg.avg_areal_prec()
-        m_epsmed = epsmed.avg_areal_prec().rtrn_arr()
+        m_eps95 = sub95.avg_areal_prec()
+        m_epsavg = subavg.avg_areal_prec()
+        m_epsmed = submed.avg_areal_prec().rtrn_arr()
 
         sub_agg = sub95.aggr_spatial(3).aggr_temporal(3)
 
         # # the plot method handles plotting ensemble objects,
         # however it is recommended to generate the field first then plot
-        eps95.plot([2021, 7, 14, 1])
-        epsavg.plot([2021, 7, 14, 1])
-        epsmed.plot([2021, 7, 14, 1])
-        sub95.plot([2021, 7, 14, 1])
-        subavg.plot([2021, 7, 14, 1])
-        submed.plot([2021, 7, 14, 1])
-        sub_agg.plot([2021, 7, 14, 3])
+        # eps95.plot([2021,10,4, 23])
+        # epsavg.plot([2021,10,4, 23])
+        # epsmed.plot([2021,10,4, 23])
+        sub95.plot([2021,10,4, 23])
+        subavg.plot([2021,10,4, 23])
+        submed.plot([2021,10,4, 23])
+        sub_agg.plot([2021,10,4, 23])
 
-        return eps95, epsavg, epsmed, m_eps95, m_epsavg, m_epsmed, sub95, subavg, submed, eps
+        return  m_eps95, m_epsavg, m_epsmed, sub95, subavg, submed, eps
         
-
-    # test_EPS()
-    
-    # eps = Ensemble_run("C:/Project/icond2eps_3_juli21.nc", 1)    
-    # eps = eps.eps_extract_by_shp("C:/Project/shp/WeiseElster/OelsnitzTEZG_DHDN")
-    # avg = eps.avg_areal_prec()   
-    # qs = avg.gen_quantiles(95)
-    # qs.get_ens_quantiles().plot()
-    
-     
-    # rad = Observation("//vs-grp07.zih.tu-dresden.de/howa/work/students/Mohamed_Elghorab/netCDFs/fertig/radRW_ICO.nc").gen_observation_field()
     
     
-    # rad = rad.extract_by_shp("shp/Mugliz/mugliz_cats.shp").avg_areal_prec()
+    m_eps95, m_epsavg, m_epsmed, sub95, subavg, submed, eps = test_EPS()
     
-    # type(rad.average)
-    
-    # icond2 = Deterministic_run("C:/netCDFs/3/3hour_icond2.nc").gen_deterministic_field()
-    
-    # cosmod2 = Deterministic_run("C:/netCDFs/3/3hour_cosmod2.nc").gen_deterministic_field()
-    
-    
-    # cosmod2eps = Ensemble_run("C:/netCDFs/3/3hour_cosmod2eps.nc").eps_extract_by_shp("shp/Mugliz/mugliz_cats.shp").avg_areal_prec()
-    
-    # rad = Observation('C:/netCDFs/fertig/radRW_cosmod2eps.nc').gen_observation_field().aggr_temporal(3).extract_by_shp("shp/Mugliz/mugliz_cats.shp").avg_areal_prec()
-    # a = icond2.extract_by_shp("shp/Mugliz/mugliz_cats.shp")
-    
-    # a.avg_areal_prec().average.plot()
-   

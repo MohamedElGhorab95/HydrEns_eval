@@ -197,6 +197,7 @@ class ROC(object):
             # self.pod_df_q = self.pod_df_q.reindex(self.pofd_df_q.index)
             # # computing area under the curve
             # self.ar = np.around(metrics.auc(self.pofd_df_q,self.pod_df_q),3)
+
             self.ar = np.quantile(self.area_df, quantile/100)
             
             

@@ -355,12 +355,16 @@ def radolantoNetCDF(radolan_times, datafolder, idx_lon, idx_lat, outputfile):
     for x in radolan_times:
         f_date = x.strftime("%Y%m")
         # read Icon ensemble files
+        # try:
+            # works in case of evaluation framework
         rad.read_file(start_datetime=x, directory=datafolder+f_date
                         , short='int16', scale_factor=0.01
         , fill_value=-1)
-        # rad.read_file(start_datetime=x, directory=datafolder
-        #                 , short='int16', scale_factor=0.01
-        # , fill_value=-1)
+        # except:
+        #     # works for low level
+        #     rad.read_file(start_datetime=x, directory=datafolder
+        #                     , short='int16', scale_factor=0.01
+        #     , fill_value=-1)
         # gridding the data
         rad.crop(idx_west=idx_lon[0], idx_east=idx_lon[1] - 1,
                  idx_south=idx_lat[1] - 1, idx_north=idx_lat[0])
@@ -389,47 +393,39 @@ if __name__ == '__main__':
 # Sachsen after WGS84 > lat 50.1 - 51.8 | long 11.7 - 15.2 <
     lon, lat, id_lon, id_lat = target(50.1,51.8,11.7,15.2,"radolanrx",version=4)
 
-    # fortime = timeframe((2020,6,27,0), (2020,6,28,0), "forecast")
+    fortime = timeframe((2021,10,3,0), (2021,10,5,0), "forecast")
 
-    radtime = timeframe((2014,10,21,0), (2014,10,26,21), "radar")
-
-
-
-    # CosmoD2toNetCDF(ST=fortime,datafolder="//vs-grp08.zih.tu-dresden.de/hwstore/CosmoD2/",
-    #             longitude=lon,
-    #             latitude=lat,
-    #             nearestpoints="Sachsen_nearestpoints_cosmo.npz",
-    #             outputfile="D:/Erasmus_FRM/05.Masterarbeit/03.Bearbeitung/cosmod2.nc")
+    radtime = timeframe((2021,10,3,0), (2021,10,5,0), "radar")
 
 
 
-
-
-    # radolantoNetCDF(radtime, datafolder="//vs-grp08.zih.tu-dresden.de/hwstore/RadolanRW/202209",
-    #                 idx_lon=id_lon, idx_lat=id_lat, 
-    #                 outputfile="D:/Erasmus_FRM/05.Masterarbeit/03.Bearbeitung/02.netCDFs/RadolanRw/radRW_05_10_09_22.nc")
     
-    # IconD2toNetCDF(ST=fortime,datafolder="//vs-grp08.zih.tu-dresden.de/hwstore/IconD2/tot_prec/202209",
-    #                 longitude=lon,
-    #                 latitude=lat,
-    #                 nearestpoints="D:/Erasmus_FRM/05.Masterarbeit/03.Bearbeitung/01.Code/WorkspaceSachsen_nearestpoints.npz",
-    #                 outputfile="D:/Erasmus_FRM/05.Masterarbeit/03.Bearbeitung/02.netCDFs/Icond2/icond2__05_10_09_22.nc")
-    
-    # IconD2EPStoNetCDF(fortime, "//vs-grp08.zih.tu-dresden.de/hwstore/IconD2eps/tot_prec/202209",
-    #                   lon, lat,
-    #                   "D:/Erasmus_FRM/05.Masterarbeit/03.Bearbeitung/01.Code/WorkspaceSachsen_nearestpoints.npz",
-    #                   "D:/Erasmus_FRM/05.Masterarbeit/03.Bearbeitung/02.netCDFs/Icond2EPS/icond2eps__09_10_09_22.nc")
+    radolantoNetCDF(radtime, datafolder="//vs-grp08.zih.tu-dresden.de/hwstore/RadolanRW/",
+                    idx_lon=id_lon, 
+                    idx_lat=id_lat, 
+                    outputfile="Data/NetCDFs/Example/radRW_example.nc")
+   
     
     
     
     
+    IconD2toNetCDF(ST=fortime,datafolder="//vs-grp08.zih.tu-dresden.de/hwstore/IconD2/tot_prec/",
+                    longitude=lon,
+                    latitude=lat,
+                    nearestpoints="Sachsen_nearestpoints.npz",
+                    outputfile="Data/NetCDFs/Example/icond2_example.nc")
     
     
-    radolantoNetCDF(radtime, datafolder="Z:/work/Mohamed/01_Bearbeitung/00_Kreischa_NA_Modell/00_Sontiges/radolan/RW201410",
-                    idx_lon=id_lon, idx_lat=id_lat, 
-                    outputfile="Z:/work/Mohamed/01_Bearbeitung/00_Kreischa_NA_Modell/00_Sontiges/radolan/RW201410")
     
-                    #outputfile="C:/Users/user/Desktop/radar")
+   
+    IconD2EPStoNetCDF(fortime, "//vs-grp08.zih.tu-dresden.de/hwstore/IconD2eps/tot_prec/",
+                      lon, 
+                      lat,
+                      "Sachsen_nearestpoints.npz",
+                      "Data/NetCDFs/Example/icond2eps_example.nc")
+    
+    
+    
     
     
     
