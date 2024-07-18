@@ -38,10 +38,7 @@ def calc_metric(event_dictionary, metric, threshold):
                 results.append(CONT(env['gauge'], env[t], threshold).false_alarms())
             elif metric == 'accuracy':
                 results.append(CONT(env['gauge'], env[t], threshold).acc()*100)
-            elif metric == 'roc':
-                r = ROC(env['gauge'], env[t])
-                results.append(r.roc_auc(threshold))
-   
+           
     
     return results
 
@@ -52,11 +49,11 @@ def evaluate_for_cat(catchment, th):
     threshold = 0.25*th
     
     if catchment == 'Oelsnitz':
-        obs = R_Observation('C:/Users/User/Downloads/Oelsnitz.csv')
+        obs = R_Observation('Runoff_Evaluation/Oelsnitz.csv')
     elif catchment == 'Adorf':
-        obs = R_Observation('C:/Users/User/Downloads/Adorf.csv')
+        obs = R_Observation('Runoff_Evaluation/Adorf.csv')
     elif catchment == 'Bad Elster':
-        obs = R_Observation('C:/Users/User/Downloads/Bad_Elster.csv')
+        obs = R_Observation('Runoff_Evaluation/Bad_Elster.csv')
     
     variables = [
                'ensemble_q10',
@@ -85,14 +82,14 @@ def evaluate_for_cat(catchment, th):
     for lead in np.arange(3,25,3):
         
         if catchment == 'Oelsnitz':
-            quans = xr.open_dataset('//vs-grp07.zih.tu-dresden.de/howa/work/students/Mohamed_Elghorab/netCDFs/Runoff/{}hrs_leadtime__5661371_Oelsnitz_WeisseElster_data.nc'.format(lead))
-            full = xr.open_dataset('//vs-grp07.zih.tu-dresden.de/howa/work/students/Mohamed_Elghorab/netCDFs/Runoff/{}hrs_leadtime__5661371_Oelsnitz_WeisseElster_data_EPS.nc'.format(lead))
+            quans = xr.open_dataset('Data/netCDFs/Runoff/{}hrs_leadtime__5661371_Oelsnitz_WeisseElster_data.nc'.format(lead))
+            full = xr.open_dataset('Data/netCDFs/Runoff/{}hrs_leadtime__5661371_Oelsnitz_WeisseElster_data_EPS.nc'.format(lead))
         elif catchment == 'Adorf':
-            quans = xr.open_dataset('//vs-grp07.zih.tu-dresden.de/howa/work/students/Mohamed_Elghorab/netCDFs/Runoff/{}hrs_leadtime__5661311_Adorf_WeisseElster_data.nc'.format(lead))
-            full = xr.open_dataset('//vs-grp07.zih.tu-dresden.de/howa/work/students/Mohamed_Elghorab/netCDFs/Runoff/{}hrs_leadtime__5661311_Adorf_WeisseElster_data_EPS.nc'.format(lead))
+            quans = xr.open_dataset('Data/netCDFs/Runoff/{}hrs_leadtime__5661311_Adorf_WeisseElster_data.nc'.format(lead))
+            full = xr.open_dataset('Data/netCDFs/Runoff/{}hrs_leadtime__5661311_Adorf_WeisseElster_data_EPS.nc'.format(lead))
         elif catchment == 'Bad Elster':
-            quans = xr.open_dataset('//vs-grp07.zih.tu-dresden.de/howa/work/students/Mohamed_Elghorab/netCDFs/Runoff/{}hrs_leadtime__56611313_BadElster_WeisseElster_data.nc'.format(lead))
-            full = xr.open_dataset('//vs-grp07.zih.tu-dresden.de/howa/work/students/Mohamed_Elghorab/netCDFs/Runoff/{}hrs_leadtime__56611313_BadElster_WeisseElster_data_EPS.nc'.format(lead))
+            quans = xr.open_dataset('Data/netCDFs/Runoff/{}hrs_leadtime__56611313_BadElster_WeisseElster_data.nc'.format(lead))
+            full = xr.open_dataset('Data/netCDFs/Runoff/{}hrs_leadtime__56611313_BadElster_WeisseElster_data_EPS.nc'.format(lead))
             
             
         library = {'gauge': obs,
@@ -108,10 +105,8 @@ def evaluate_for_cat(catchment, th):
         con_mis = calc_metric(library, "cont.misses", threshold)
         con_fal = calc_metric(library, "cont.fal", threshold)
         con_acc = calc_metric(library, "accuracy", threshold)
-        con_auc = calc_metric(library, "roc", threshold)
-        auc.append(ROC_totens(obs, full, threshold).area)
-        crps.append(Full_Ens(obs.fr, full).crps())
-        rmse.append(Full_Ens(obs.fr, full).rmse())
+        # crps.append(Full_Ens(obs.fr, full).crps())
+        # rmse.append(Full_Ens(obs.fr, full).rmse())
         # fill the dictionaries with values
         for var in variables:
             
@@ -119,14 +114,14 @@ def evaluate_for_cat(catchment, th):
             con_mis_dic[var][c]= con_mis[variables.index(var)]
             con_fal_dic[var][c]= con_fal[variables.index(var)]
             con_acc_dic[var][c]= con_acc[variables.index(var)]
-            roc_auc_dic[var][c]= con_auc[variables.index(var)]
+            # roc_auc_dic[var][c]= con_auc[variables.index(var)]
         
         
         c+=1
     
     return {'Hits':con_hit_dic,
             'Misses': con_mis_dic, 'False Alarms': con_fal_dic, 
-            'Accuracy':con_acc_dic, 'Area under ROC curve':roc_auc_dic, 'Area under ROC curve | Ensemble':auc, 'CRPS':crps, 'RMSE':rmse}
+            'Accuracy':con_acc_dic}
 
 
 
@@ -181,12 +176,20 @@ def plot_curves(results, catchment_name):
 
 
 
-cat_library = {'Oelsnitz':25.6 , 'Adorf':13.3, 'Bad Elster': 3.72}
 
-for c in cat_library.keys():
+# ==============================================================================
+###########################   Testing | Examples  #############################
+# ==============================================================================
+
+
+if __name__ == '__main__':
+
+    cat_library = {'Oelsnitz':25.6 , 'Adorf':13.3, 'Bad Elster': 3.72}
     
-    res = evaluate_for_cat(c,cat_library[c])
-    plot_curves(res, c)
+    for c in cat_library.keys():
+        
+        res = evaluate_for_cat(c,cat_library[c])
+        plot_curves(res, c)
 
     
 

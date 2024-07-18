@@ -52,24 +52,24 @@ def create_for_regions( metric):
         
         for lead in range(3,25,3):
             if a == 'Oelsnitz':
-                obs = R_Observation('E:/HydrEns_eval/Runoff_Evaluation/Oelsnitz.csv')
-                # full = xr.open_dataset('//vs-grp07.zih.tu-dresden.de/howa/work/students/Mohamed_Elghorab/Mohamed Elghorab_MSc_Working_files/netCDFs/Runoff/{}hrs_leadtime__5661371_Oelsnitz_WeisseElster_data_EPS.nc'.format(lead))
+                obs = R_Observation('Runoff_Evaluation/Oelsnitz.csv')
+                # full = xr.open_dataset('Data/Mohamed Elghorab_MSc_Working_files/netCDFs/Runoff/{}hrs_leadtime__5661371_Oelsnitz_WeisseElster_data_EPS.nc'.format(lead))
                 
-                full = xr.open_dataset('//vs-grp07.zih.tu-dresden.de/howa/work/students/Mohamed_Elghorab/Mohamed Elghorab_MSc_Working_files/netCDFs/Runoff/{}hrs_leadtime__5661371_Oelsnitz_WeisseElster_data_EPS.nc'.format(lead))
+                full = xr.open_dataset('Data/netCDFs/Runoff/{}hrs_leadtime__5661371_Oelsnitz_WeisseElster_data_EPS.nc'.format(lead))
                 
                 res.append(calc_metric(obs, full, region1[a][1]*0.25, metric))
             elif a == 'Adorf':
-                obs = R_Observation('E:/HydrEns_eval/Runoff_Evaluation/Adorf.csv')
-                # full = xr.open_dataset('//vs-grp07.zih.tu-dresden.de/howa/work/students/Mohamed_Elghorab/Mohamed Elghorab_MSc_Working_files/netCDFs/Runoff/{}hrs_leadtime__5661311_Adorf_WeisseElster_data_EPS.nc'.format(lead))
+                obs = R_Observation('Runoff_Evaluation/Adorf.csv')
+                # full = xr.open_dataset('Data/Mohamed Elghorab_MSc_Working_files/netCDFs/Runoff/{}hrs_leadtime__5661311_Adorf_WeisseElster_data_EPS.nc'.format(lead))
                 
-                full = xr.open_dataset('//vs-grp07.zih.tu-dresden.de/howa/work/students/Mohamed_Elghorab/Mohamed Elghorab_MSc_Working_files/netCDFs/Runoff/{}hrs_leadtime__5661311_Adorf_WeisseElster_data_EPS.nc'.format(lead))
+                full = xr.open_dataset('Data/netCDFs/Runoff/{}hrs_leadtime__5661311_Adorf_WeisseElster_data_EPS.nc'.format(lead))
                 
                 res.append(calc_metric(obs, full, region1[a][1]*0.25, metric))
             elif a == 'Bad Elster':
-                obs = R_Observation('E:/HydrEns_eval/Runoff_Evaluation/Bad_Elster.csv')
-                # full = xr.open_dataset('//vs-grp07.zih.tu-dresden.de/howa/work/students/Mohamed_Elghorab/Mohamed Elghorab_MSc_Working_files/netCDFs/Runoff/{}hrs_leadtime__56611313_BadElster_WeisseElster_data_EPS.nc'.format(lead))
+                obs = R_Observation('Runoff_Evaluation/Bad_Elster.csv')
+                # full = xr.open_dataset('Data/Mohamed Elghorab_MSc_Working_files/netCDFs/Runoff/{}hrs_leadtime__56611313_BadElster_WeisseElster_data_EPS.nc'.format(lead))
                 
-                full = xr.open_dataset('//vs-grp07.zih.tu-dresden.de/howa/work/students/Mohamed_Elghorab/Mohamed Elghorab_MSc_Working_files/netCDFs/Runoff/{}hrs_leadtime__56611313_BadElster_WeisseElster_data_EPS.nc'.format(lead))
+                full = xr.open_dataset('Data/netCDFs/Runoff/{}hrs_leadtime__56611313_BadElster_WeisseElster_data_EPS.nc'.format(lead))
                 
                 res.append(calc_metric(obs, full, region1[a][1]*0.25, metric))
         
@@ -81,24 +81,24 @@ def create_for_regions( metric):
         
         for lead in range(3,25,3):
             if a == 'Dohna':
-                obs = R_Observation('E:/HydrEns_eval/Runoff_Evaluation/Dohna.csv')
-                # full = xr.open_dataset('//vs-grp07.zih.tu-dresden.de/howa/work/students/Mohamed_Elghorab/Mohamed Elghorab_MSc_Working_files/netCDFs/Runoff/{}hrs_leadtime__53718979_Dohna_Mueglitz_data_EPS.nc'.format(lead))
+                obs = R_Observation('Runoff_Evaluation/Dohna.csv')
+                # full = xr.open_dataset('Data/Mohamed Elghorab_MSc_Working_files/netCDFs/Runoff/{}hrs_leadtime__53718979_Dohna_Mueglitz_data_EPS.nc'.format(lead))
                
-                full = xr.open_dataset('//vs-grp07.zih.tu-dresden.de/howa/work/students/Mohamed_Elghorab/Mohamed Elghorab_MSc_Working_files/netCDFs/Runoff/{}hrs_leadtime__53718979_Dohna_Mueglitz_data_EPS.nc'.format(lead))
+                full = xr.open_dataset('Data/netCDFs/Runoff/{}hrs_leadtime__53718979_Dohna_Mueglitz_data_EPS.nc'.format(lead))
                 
                 res.append(calc_metric(obs, full, region2[a][1]*0.25, metric))
             elif a == 'Lauenstein':
-                obs = R_Observation('E:/HydrEns_eval/Runoff_Evaluation/Lauenstein.csv')
-                # full = xr.open_dataset('//vs-grp07.zih.tu-dresden.de/howa/work/students/Mohamed_Elghorab/Mohamed Elghorab_MSc_Working_files/netCDFs/Runoff/{}hrs_leadtime__5371831_Lauenstein4_Mueglitz_data_EPS.nc'.format(lead))
+                obs = R_Observation('Runoff_Evaluation/Lauenstein.csv')
+                # full = xr.open_dataset('Data/Mohamed Elghorab_MSc_Working_files/netCDFs/Runoff/{}hrs_leadtime__5371831_Lauenstein4_Mueglitz_data_EPS.nc'.format(lead))
                 
-                full = xr.open_dataset('//vs-grp07.zih.tu-dresden.de/howa/work/students/Mohamed_Elghorab/Mohamed Elghorab_MSc_Working_files/netCDFs/Runoff/{}hrs_leadtime__5371831_Lauenstein4_Mueglitz_data_EPS.nc'.format(lead))
+                full = xr.open_dataset('Data/netCDFs/Runoff/{}hrs_leadtime__5371831_Lauenstein4_Mueglitz_data_EPS.nc'.format(lead))
                 
                 res.append(calc_metric(obs, full, region2[a][1]*0.25, metric))
             elif a == 'Geising':
-                obs = R_Observation('E:/HydrEns_eval/Runoff_Evaluation/Geising.csv')
-                # full = xr.open_dataset('//vs-grp07.zih.tu-dresden.de/howa/work/students/Mohamed_Elghorab/Mohamed Elghorab_MSc_Working_files/netCDFs/Runoff/{}hrs_leadtime__5371823_Geising1_WeisseMueglitz_data_EPS.nc'.format(lead))
+                obs = R_Observation('Runoff_Evaluation/Geising.csv')
+                # full = xr.open_dataset('Data/Mohamed Elghorab_MSc_Working_files/netCDFs/Runoff/{}hrs_leadtime__5371823_Geising1_WeisseMueglitz_data_EPS.nc'.format(lead))
                 
-                full = xr.open_dataset('//vs-grp07.zih.tu-dresden.de/howa/work/students/Mohamed_Elghorab/Mohamed Elghorab_MSc_Working_files/netCDFs/Runoff/{}hrs_leadtime__5371823_Geising1_WeisseMueglitz_data_EPS.nc'.format(lead))
+                full = xr.open_dataset('Data/netCDFs/Runoff/{}hrs_leadtime__5371823_Geising1_WeisseMueglitz_data_EPS.nc'.format(lead))
                 
                 res.append(calc_metric(obs, full, region2[a][1]*0.25, metric))
         
@@ -109,24 +109,24 @@ def create_for_regions( metric):
         
         for lead in range(3,25,3):
             if a == 'Zittau':
-                obs = R_Observation('E:/HydrEns_eval/Runoff_Evaluation/Zittau.csv')
-                # full = xr.open_dataset('//vs-grp07.zih.tu-dresden.de/howa/work/students/Mohamed_Elghorab/Mohamed Elghorab_MSc_Working_files/netCDFs/Runoff/{}hrs_leadtime__67414799_Zittau_Mandau_data_EPS.nc'.format(lead))
-                full = xr.open_dataset('//vs-grp07.zih.tu-dresden.de/howa/work/students/Mohamed_Elghorab/Mohamed Elghorab_MSc_Working_files/netCDFs/Runoff/{}hrs_leadtime__67414799_Zittau_Mandau_data_EPS.nc'.format(lead))
+                obs = R_Observation('Runoff_Evaluation/Zittau.csv')
+                # full = xr.open_dataset('Data/Mohamed Elghorab_MSc_Working_files/netCDFs/Runoff/{}hrs_leadtime__67414799_Zittau_Mandau_data_EPS.nc'.format(lead))
+                full = xr.open_dataset('Data/netCDFs/Runoff/{}hrs_leadtime__67414799_Zittau_Mandau_data_EPS.nc'.format(lead))
                 res.append(calc_metric(obs, full, region3[a][1], metric))
             elif a == 'Grossschoenau':
-                obs = R_Observation('E:/HydrEns_eval/Runoff_Evaluation/Grossschoenau.csv')
-                # full = xr.open_dataset('//vs-grp07.zih.tu-dresden.de/howa/work/students/Mohamed_Elghorab/Mohamed Elghorab_MSc_Working_files/netCDFs/Runoff/{}hrs_leadtime__67414511_Grossschoenau_Mandau_data_EPS.nc'.format(lead))
-                full = xr.open_dataset('//vs-grp07.zih.tu-dresden.de/howa/work/students/Mohamed_Elghorab/Mohamed Elghorab_MSc_Working_files/netCDFs/Runoff/{}hrs_leadtime__67414511_Grossschoenau_Mandau_data_EPS.nc'.format(lead))
+                obs = R_Observation('Runoff_Evaluation/Grossschoenau.csv')
+                # full = xr.open_dataset('Data/Mohamed Elghorab_MSc_Working_files/netCDFs/Runoff/{}hrs_leadtime__67414511_Grossschoenau_Mandau_data_EPS.nc'.format(lead))
+                full = xr.open_dataset('Data/netCDFs/Runoff/{}hrs_leadtime__67414511_Grossschoenau_Mandau_data_EPS.nc'.format(lead))
                 res.append(calc_metric(obs, full, region3[a][1], metric))
             # elif a == 'Seifhennersdorf':
             #     obs = R_Observation('E:/HydrEns_eval/Runoff_Evaluation/Seifhennersdorf.csv')
-            #     # full = xr.open_dataset('//vs-grp07.zih.tu-dresden.de/howa/work/students/Mohamed_Elghorab/Mohamed Elghorab_MSc_Working_files/netCDFs/Runoff/{}hrs_leadtime__67414311_Seifhennersdorf_Mandau_data_EPS.nc'.format(lead))
-            #     full = xr.open_dataset('//vs-grp07.zih.tu-dresden.de/howa/work/students/Mohamed_Elghorab/Mohamed Elghorab_MSc_Working_files/netCDFs/Runoff/{}hrs_leadtime__67414311_Seifhennersdorf_Mandau_data_EPS.nc'.format(lead))
+            #     # full = xr.open_dataset('Data/Mohamed Elghorab_MSc_Working_files/netCDFs/Runoff/{}hrs_leadtime__67414311_Seifhennersdorf_Mandau_data_EPS.nc'.format(lead))
+            #     full = xr.open_dataset('Data/Mohamed Elghorab_MSc_Working_files/netCDFs/Runoff/{}hrs_leadtime__67414311_Seifhennersdorf_Mandau_data_EPS.nc'.format(lead))
             #     res.append(calc_metric(obs, full, region3[a][1], metric))
             elif a == 'Niederoderwitz':
-                obs = R_Observation('E:/HydrEns_eval/Runoff_Evaluation/Niederoderwitz.csv')
-                # full = xr.open_dataset('//vs-grp07.zih.tu-dresden.de/howa/work/students/Mohamed_Elghorab/Mohamed Elghorab_MSc_Working_files/netCDFs/Runoff/{}hrs_leadtime__67414651_Niederoderwitz_Mandau_data_EPS.nc'.format(lead))
-                full = xr.open_dataset('//vs-grp07.zih.tu-dresden.de/howa/work/students/Mohamed_Elghorab/Mohamed Elghorab_MSc_Working_files/netCDFs/Runoff/{}hrs_leadtime__67414651_Niederoderwitz_Mandau_data_EPS.nc'.format(lead))
+                obs = R_Observation('Runoff_Evaluation/Niederoderwitz.csv')
+                # full = xr.open_dataset('Data/Mohamed Elghorab_MSc_Working_files/netCDFs/Runoff/{}hrs_leadtime__67414651_Niederoderwitz_Mandau_data_EPS.nc'.format(lead))
+                full = xr.open_dataset('Data/netCDFs/Runoff/{}hrs_leadtime__67414651_Niederoderwitz_Mandau_data_EPS.nc'.format(lead))
                 res.append(calc_metric(obs, full, region3[a][1], metric))
         
         data3[a][0]=res   
@@ -161,23 +161,29 @@ def plot_spatial(list_of_dics, metric):
         ax.set_ylabel('{}\n Full Ensemble'.format(metric))
         plt.xlim(3, max_lead)
         plt.ylim(0,6)
-        # plt.savefig("//vs-grp07.zih.tu-dresden.de/howa/work/students/Mohamed_Elghorab/Mohamed Elghorab_MSc_Working_files/results/spatial extent analysis/{}/{}".format(metric, regions[region]), bbox_inches = 'tight')        
+        # plt.savefig("Data/Mohamed Elghorab_MSc_Working_files/results/spatial extent analysis/{}/{}".format(metric, regions[region]), bbox_inches = 'tight')        
         region +=1
         
 
     return plt.show()
 
 
+# ==============================================================================
+###########################   Testing | Examples  #############################
+# ==============================================================================
 
-# mets = [ 'CRPS', "RMSE", 'Area under ROC curve'  ]
-mets = ['RMSE'  ]
-for m in mets:
 
+if __name__ == '__main__':
     
-    df = create_for_regions(m)
-  
-    plot_spatial(df,m)
-
-
-
-plot_spatial(df,'Normalized RMSE')
+    mets = [ 'CRPS', "RMSE", 'Area under ROC curve'  ]
+    # mets = ['RMSE'  ]
+    for m in mets:
+    
+        
+        df = create_for_regions(m)
+      
+        plot_spatial(df,m)
+    
+    
+    
+    plot_spatial(df,'Normalized RMSE')
