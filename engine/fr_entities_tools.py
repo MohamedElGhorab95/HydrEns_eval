@@ -1044,8 +1044,8 @@ class R_Observation(Runoff):
         # Read the CSV file using pandas
         df = pd.read_csv(observation_file)
         df['begin'] = pd.to_datetime(df['begin']).dt.to_pydatetime()
-        # df = df.rename(columns={'begin': 'time', 'pikobytes$hwims$550940$q-ziel-tw-15m_hi': 'runoff_discharge'})
-        df = df.rename(columns={'begin': 'time', 'hi': 'runoff_discharge'})
+        df = df.rename(columns={'begin': 'time', 'pikobytes$hwims$550940$q-ziel-tw-15m_hi': 'runoff_discharge'})
+        # df = df.rename(columns={'begin': 'time', 'hi': 'runoff_discharge'})
         
         # # Convert the DataFrame to an xarray DataArray
         self.fr = xr.DataArray(data=df["runoff_discharge"], coords=[df["time"]], dims=["time"])

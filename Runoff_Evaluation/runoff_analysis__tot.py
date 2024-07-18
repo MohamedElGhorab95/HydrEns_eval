@@ -26,7 +26,7 @@ def calc_metric(observation, forecast , threshold ,metric):
         return ROC_totens(observation, forecast, threshold).area
     elif metric == 'CRPS':
         return Full_Ens(observation.fr, forecast).crps()
-    elif metric == "RMSE":
+    elif metric == "Normalized RMSE":
         return Full_Ens(observation.fr, forecast).rmse()
     
 
@@ -175,8 +175,8 @@ def plot_spatial(list_of_dics, metric):
 
 if __name__ == '__main__':
     
-    mets = [ 'CRPS', "RMSE", 'Area under ROC curve'  ]
-    # mets = ['RMSE'  ]
+    mets = [ 'CRPS', "Normalized RMSE", 'Area under ROC curve'  ]
+    # mets = ['Normalized RMSE'  ]
     for m in mets:
     
         
@@ -186,4 +186,4 @@ if __name__ == '__main__':
     
     
     
-    plot_spatial(df,'Normalized RMSE')
+  
