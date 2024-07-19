@@ -1,0 +1,10 @@
+Weather Data Harmonizer
+numpy
+Xarray
+Xskillscore
+Geopandas
+Pyshp
+Pyproj
+Odc-geo
+Rioxarray
+Pandas
